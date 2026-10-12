@@ -1,5 +1,7 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, useState, type ErrorInfo, type ReactNode } from 'react'
+import { GlitterLab } from './components/GlitterLab'
 import { GlimmerWater } from './components/GlimmerWater'
+import { createDefaultGlitterSettings } from './lib/glitterLab'
 
 type ErrorBoundaryState = { failed: boolean }
 
@@ -28,12 +30,15 @@ class WebGLErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundar
 }
 
 export function App() {
+  const [settings, setSettings] = useState(createDefaultGlitterSettings)
+  const showGlitterLab = new URLSearchParams(window.location.search).get('debug') === 'true'
+
   return (
     <WebGLErrorBoundary>
       <main className="artwork" aria-label="阳光在深蓝灰色江面上安静地明灭">
-        <GlimmerWater />
+        <GlimmerWater settings={settings} />
+        {showGlitterLab && <GlitterLab settings={settings} onChange={setSettings} />}
       </main>
     </WebGLErrorBoundary>
   )
 }
-

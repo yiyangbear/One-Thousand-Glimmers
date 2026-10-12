@@ -53,3 +53,31 @@ Validation limitations:
 
 - Phase 1 has no sun controls or pointer breeze by design, so those state screenshots are not applicable yet.
 - Long-duration cadence and performance across multiple GPUs/browsers are deferred to later phases.
+
+## Interim milestone — Glitter Lab
+
+Status: automated checks passed on 2026-10-12; human acceptance pending. Phase 2 remains paused.
+
+Executed checks:
+
+- Architecture inspection — passed; panel state is isolated in React, parameter definitions/defaults live in `src/lib`, and the renderer updates the existing material uniforms without rebuilding shader code.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 2 files / 5 tests. Added exact-default, independent-reset, and JSON serialization checks.
+- `npm run build` — passed. Output JS is 1,118.17 kB / 311.33 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- `npm run test:e2e` — passed in Playwright Chromium, 2 tests. Verified normal-mode panel absence, seven implemented sliders, pending pointer-breeze label, expand/collapse, clipboard JSON, reset values, console/page error absence, and WebGL `getError() === 0`.
+- Actual render response — passed. Playwright raised density, size, highlight, and bloom, captured the final composited page, then set highlight intensity to zero and captured again. Browser-decoded PNG statistics confirmed the enhanced state contained materially more bright pixels.
+- Defect found and repaired — early browser runs exposed that React state updated a detached uniform container rather than the active `ShaderMaterial.uniforms`; controls appeared to move but did not affect rendering. The renderer now writes directly to the live material, and all browser checks pass after repair.
+- Screenshot inspection — passed for panel layout, values, default state, adjusted state, and absence of blank frames or major color-block regressions.
+- ImageMagick structural analysis — passed: both evidence images are 1440×900; the default frame contains 1,180 colors and the adjusted frame 1,408 colors. Their pixel difference is 598,670 pixels (46.19%), including parameter, time, and panel-value changes.
+
+Evidence:
+
+- `artifacts/screenshots/glitter-lab-default.png`
+- `artifacts/screenshots/glitter-lab-adjusted.png`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Validation limitations:
+
+- Naturalness at extreme parameter values is not guaranteed; Glitter Lab intentionally permits exploratory values outside the art-directed default.
+- Mouse breeze remains unimplemented and has no slider, as required.

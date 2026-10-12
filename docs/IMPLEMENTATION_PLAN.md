@@ -39,6 +39,16 @@ Acceptance:
 - Derive the reflection band and specular response from light/view orientation.
 - Add a restrained, hideable debug panel and automated parameter-state screenshots.
 
+## Interim milestone — Glitter Lab
+
+This user-requested development tool is implemented after Phase 1 and does not begin Phase 2.
+
+- Add a `?debug=true`-gated, collapsible live parameter panel.
+- Preserve the Phase 1 image at default values.
+- Wire only implemented controls to active WebGL uniforms; label pointer breeze as pending.
+- Verify actual final-frame pixel changes, JSON copy/reset behavior, hidden normal mode, console health, and WebGL health with Playwright.
+- Pause again for human acceptance; do not continue into Phase 2.
+
 ## Phase 3 — Pointer breeze
 
 - Track bounded pointer velocity and feed a local disturbance field.
@@ -53,4 +63,3 @@ Acceptance:
 
 - Expand logic/browser coverage, responsive/accessibility review, documentation, and deployment preparation.
 - Complete final human art acceptance and document remaining platform limits.
-

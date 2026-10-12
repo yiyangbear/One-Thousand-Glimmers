@@ -26,6 +26,15 @@
 - Responsive layout and a graceful WebGL initialization error message.
 - Reduced-motion preference lowers animation rate without stopping autonomous change.
 
+## Glitter Lab development milestone
+
+- Ordinary visits keep the artwork free of UI. `?debug=true` reveals a restrained, collapsible panel in the upper-right corner.
+- Implemented live parameters are density, size, flicker speed, highlight intensity, clustering, local bloom intensity, and wave strength.
+- The default values reproduce the Phase 1 shader constants: all multipliers are `1`, except bloom at `0`.
+- Reset restores those exact defaults. Copy exports the current parameters as formatted JSON.
+- Pointer breeze strength is shown as unavailable until Phase 3 and must not be represented by an inactive or misleading slider.
+- Control changes update the active `ShaderMaterial` uniforms without a reload or material recompilation.
+
 ## Later-phase requirements
 
 - Phase 2: physically motivated sun elevation/azimuth/intensity controls that alter band position, width, length, density, and highlight response; hideable controls.
@@ -39,4 +48,3 @@
 - TypeScript, lint, unit tests, and production build pass.
 - Screenshot evidence exists for each applicable acceptance state.
 - Target smooth interaction on modern desktop hardware; quality should degrade by resolution scaling rather than changing the artistic logic.
-

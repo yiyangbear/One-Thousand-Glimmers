@@ -3,10 +3,11 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import fragmentShader from '../shaders/glimmerWater.frag?raw'
 import vertexShader from '../shaders/fullscreen.vert?raw'
+import type { GlitterSettings } from '../lib/glitterLab'
 
 const MAX_PIXEL_RATIO = 1.75
 
-function WaterSurface() {
+function WaterSurface({ settings }: { settings: GlitterSettings }) {
   const material = useRef<THREE.ShaderMaterial>(null)
   const { gl } = useThree()
   const drawingBufferSize = useMemo(() => new THREE.Vector2(), [])
@@ -16,9 +17,30 @@ function WaterSurface() {
     () => ({
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(1, 1) },
+      uDensity: { value: 1 },
+      uGlimmerSize: { value: 1 },
+      uFlickerSpeed: { value: 1 },
+      uHighlightIntensity: { value: 1 },
+      uClustering: { value: 1 },
+      uBloomIntensity: { value: 0 },
+      uWaveStrength: { value: 1 },
     }),
     [],
   )
+
+  useEffect(() => {
+    const shader = material.current
+    if (!shader) return
+
+    shader.uniforms.uDensity.value = settings.density
+    shader.uniforms.uGlimmerSize.value = settings.size
+    shader.uniforms.uFlickerSpeed.value = settings.flickerSpeed
+    shader.uniforms.uHighlightIntensity.value = settings.highlightIntensity
+    shader.uniforms.uClustering.value = settings.clustering
+    shader.uniforms.uBloomIntensity.value = settings.bloomIntensity
+    shader.uniforms.uWaveStrength.value = settings.waveStrength
+    gl.domElement.dataset.visualSettings = JSON.stringify(settings)
+  }, [gl, settings])
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -55,7 +77,7 @@ function WaterSurface() {
   )
 }
 
-export function GlimmerWater() {
+export function GlimmerWater({ settings }: { settings: GlitterSettings }) {
   return (
     <Canvas
       className="water-canvas"
@@ -72,8 +94,7 @@ export function GlimmerWater() {
         gl.domElement.dataset.renderer = 'ready'
       }}
     >
-      <WaterSurface />
+      <WaterSurface settings={settings} />
     </Canvas>
   )
 }
-

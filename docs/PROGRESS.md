@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 1 implementation and automated QA are complete. The project is paused at the first human visual-acceptance point.
+Phase 1 and the interim Glitter Lab milestone are complete. The project is paused for human acceptance; Phase 2 has not started.
 
 ## Completed
 
@@ -14,14 +14,19 @@ Phase 1 implementation and automated QA are complete. The project is paused at t
 - Added deterministic, spatially stable glimmer sites, a broken directional reflection band, independent temporal envelopes, rare brighter facets, and reduced-motion pacing.
 - Added Playwright coverage for full-screen layout, console/page errors, WebGL error state, and two normal-state screenshots.
 - Saved Phase 1 evidence under `artifacts/screenshots/` and opened a local preview at `http://127.0.0.1:5173/`.
+- Added the `?debug=true` Glitter Lab with seven live shader controls, collapse/expand behavior, exact default reset, and JSON clipboard export.
+- Clearly marked pointer breeze strength as unavailable until Phase 3, without rendering a nonfunctional input.
+- Preserved the prior artwork as the control defaults and kept ordinary visits free of development UI.
+- Added Playwright verification for final-frame pixel response, hidden normal mode, clipboard output, reset, collapse/expand, console health, and WebGL health.
 
 ## Current issues and risks
 
 - Naturalness, restraint, and long-viewing comfort require human visual acceptance even after automated smoke checks.
 - The production bundle is approximately 310 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F, does not fail the build, and can be revisited during Phase 4 performance work.
+- Glitter Lab uses a shader-local halo rather than a post-processing pass. Its default is zero; post-processing bloom remains a possible Phase 4 decision.
 
 ## Next
 
-1. Receive human feedback on glimmer density, brightness hierarchy, spatial band shape, and water presence.
-2. If accepted, begin Phase 2 sun controls and physically parameterized reflection changes.
-3. If revision is requested, tune the Phase 1 shader while preserving its commit as a rollback point.
+1. Receive human feedback on Glitter Lab ergonomics and parameter ranges.
+2. Keep Phase 2 paused until explicitly requested.
+3. If the panel is accepted and Phase 2 is later authorized, reuse its control architecture for sun parameters.

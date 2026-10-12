@@ -8,6 +8,7 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4173',
     viewport: { width: 1440, height: 900 },
     colorScheme: 'dark',
+    permissions: ['clipboard-read', 'clipboard-write'],
   },
   webServer: {
     command: 'npm run dev -- --port 4173',
@@ -15,4 +16,3 @@ export default defineConfig({
     reuseExistingServer: true,
   },
 })
-

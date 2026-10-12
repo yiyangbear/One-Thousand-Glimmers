@@ -22,6 +22,7 @@ Build a quiet, full-screen generative artwork drawn from sunlight glimmering on 
 - Keep shader source in `src/shaders`, scene orchestration in `src/components`, and pure deterministic helpers in `src/lib`.
 - Prefer a single plane/full-screen shader over particle object churn.
 - Keep UI minimal and separate from render-loop state.
+- Keep Glitter Lab hidden unless the URL contains `?debug=true`; its defaults must preserve the accepted artwork. Never expose inactive controls as working sliders.
 
 ## Phase workflow
 
@@ -38,4 +39,3 @@ For every phase:
 9. Commit the phase independently only after its acceptance criteria pass. Preserve important visual milestones as commits.
 
 Never report a failed or unexecuted check as passing. Subjective visual quality remains a human art-acceptance item.
-
