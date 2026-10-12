@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint . --max-warnings 0",
-    "test": "vitest run",
+    "test": "vitest run src",
     "test:e2e": "playwright test"
   },
   "dependencies": {
