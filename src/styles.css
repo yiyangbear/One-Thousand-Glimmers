@@ -1,0 +1,23 @@
+:root {
+  color-scheme: dark;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: #172c33;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root,
+.foundation {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.foundation {
+  background: #172c33;
+}
+
