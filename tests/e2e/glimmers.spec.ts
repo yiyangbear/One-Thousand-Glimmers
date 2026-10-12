@@ -33,6 +33,42 @@ async function countBrightPixelsInScreenshot(page: Page, png: Buffer): Promise<n
   }, png.toString('base64'))
 }
 
+async function countChangedPixelsBetweenScreenshots(
+  page: Page,
+  firstPng: Buffer,
+  secondPng: Buffer,
+): Promise<number> {
+  return page.evaluate(
+    async ({ first, second }) => {
+      const decode = async (base64: string) => {
+        const image = new Image()
+        image.src = `data:image/png;base64,${base64}`
+        await image.decode()
+        const sample = document.createElement('canvas')
+        sample.width = image.naturalWidth
+        sample.height = image.naturalHeight
+        const context = sample.getContext('2d', { willReadFrequently: true })
+        if (!context) return new Uint8ClampedArray()
+        context.drawImage(image, 0, 0)
+        return context.getImageData(0, 0, sample.width, sample.height).data
+      }
+
+      const firstPixels = await decode(first)
+      const secondPixels = await decode(second)
+      let changedPixels = 0
+      for (let index = 0; index < firstPixels.length; index += 16) {
+        const delta =
+          Math.abs(firstPixels[index] - secondPixels[index]) +
+          Math.abs(firstPixels[index + 1] - secondPixels[index + 1]) +
+          Math.abs(firstPixels[index + 2] - secondPixels[index + 2])
+        if (delta > 18) changedPixels += 1
+      }
+      return changedPixels
+    },
+    { first: firstPng.toString('base64'), second: secondPng.toString('base64') },
+  )
+}
+
 test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
   const errors = collectRuntimeErrors(page)
 
@@ -55,7 +91,7 @@ test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
 })
 
 test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async ({ page }) => {
-  test.setTimeout(60_000)
+  test.setTimeout(90_000)
   const errors = collectRuntimeErrors(page)
 
   await page.goto('/?debug=true')
@@ -63,11 +99,43 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(panel).toBeVisible()
   await expect(panel.locator('input[type="range"]')).toHaveCount(11)
+  await expect(page.getByTestId('control-flickerSpeed')).toHaveAttribute('max', '6')
   await expect(panel.getByText('未实现 · Phase 3')).toBeVisible()
+
+  await page.getByTestId('control-waveStrength').fill('0')
+  await page.getByTestId('control-flickerSpeed').fill('0.1')
+  await page.waitForTimeout(300)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const slowStart = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+  await page.waitForTimeout(350)
+  const slowEnd = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+
+  await page.getByTestId('control-flickerSpeed').fill('6')
+  await page.waitForTimeout(300)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const fastStart = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+  await page.waitForTimeout(350)
+  const fastEnd = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+
+  const slowChangedPixels = await countChangedPixelsBetweenScreenshots(page, slowStart, slowEnd)
+  const fastChangedPixels = await countChangedPixelsBetweenScreenshots(page, fastStart, fastEnd)
+  expect(fastChangedPixels).toBeGreaterThan(slowChangedPixels * 1.5)
+
+  await panel.getByRole('button', { name: '恢复默认' }).click()
 
   await page.waitForTimeout(900)
   await page.screenshot({
-    path: 'artifacts/screenshots/glint-field-default.png',
+    path: 'artifacts/screenshots/glint-cadence-default.png',
     fullPage: true,
   })
 
@@ -101,17 +169,17 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(boostedBrightPixels).toBeGreaterThan(mutedBrightPixels + 50)
 
   const exportedSettings = {
-    density: 0.72,
-    size: 1.25,
-    flickerSpeed: 0.9,
-    highlightIntensity: 2.2,
-    clustering: 0.28,
-    bloomIntensity: 0.26,
-    waveStrength: 1.35,
-    finePointRatio: 0.92,
-    waterContrast: 1.5,
-    reflectionBandWidth: 0.7,
-    localCorrelation: 0.82,
+    density: 0.61,
+    size: 1.65,
+    flickerSpeed: 4.8,
+    highlightIntensity: 2.53,
+    clustering: 0,
+    bloomIntensity: 0.34,
+    waveStrength: 0.36,
+    finePointRatio: 0.96,
+    waterContrast: 1.6,
+    reflectionBandWidth: 0.76,
+    localCorrelation: 0.7,
   }
 
   for (const [key, value] of Object.entries(exportedSettings)) {
@@ -119,11 +187,11 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   }
   await page.waitForTimeout(180)
   await page.screenshot({
-    path: 'artifacts/screenshots/glint-field-optimized.png',
+    path: 'artifacts/screenshots/glint-cadence-fast.png',
     fullPage: true,
   })
   await page.screenshot({
-    path: 'artifacts/screenshots/glint-field-detail.png',
+    path: 'artifacts/screenshots/glint-cadence-detail.png',
     clip: { x: 520, y: 150, width: 560, height: 560 },
   })
 
@@ -133,10 +201,12 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(clipboard).toEqual(exportedSettings)
 
   await panel.getByRole('button', { name: '恢复默认' }).click()
-  await expect(page.getByTestId('control-density')).toHaveValue('0.72')
-  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.22')
+  await expect(page.getByTestId('control-density')).toHaveValue('0.61')
+  await expect(page.getByTestId('control-size')).toHaveValue('1.65')
+  await expect(page.getByTestId('control-flickerSpeed')).toHaveValue('3')
+  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.34')
   await expect(page.getByTestId('control-finePointRatio')).toHaveValue('0.96')
-  await expect(page.getByTestId('control-reflectionBandWidth')).toHaveValue('0.78')
+  await expect(page.getByTestId('control-reflectionBandWidth')).toHaveValue('0.76')
 
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeHidden()

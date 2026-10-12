@@ -29,12 +29,15 @@ Phase 1, Glitter Lab, the point-shape refactor, and the sun-glitter spatial-orga
 - Added spatially smooth neighborhood pulses so adjacent glints share part of their timing while retaining individual phases.
 - Added live reflection-band width and local-correlation controls to Glitter Lab, bringing the implemented total to eleven.
 - Strengthened subtle gray-blue/cyan-gray directional water structure and saved three new visual-evidence screenshots.
+- Applied the latest supplied tuning as defaults, including reduced density `0.61`, larger point scale `1.65`, lower wave strength `0.36`, and flicker speed `3`.
+- Expanded Glitter Lab's flicker-speed range from `3` to `6` and raised both point-level and neighborhood-pulse temporal frequencies.
+- Added a browser time-difference assertion proving that speed `6` changes materially more highlight pixels than speed `0.1` over the same interval.
 
 ## Current issues and risks
 
 - Naturalness, restraint, and long-viewing comfort require human visual acceptance even after automated smoke checks.
 - The production bundle is approximately 310 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F, does not fail the build, and can be revisited during Phase 4 performance work.
-- Glitter Lab uses a shader-local halo rather than a post-processing pass. Its current default is `0.22`; post-processing bloom remains a possible Phase 4 decision.
+- Glitter Lab uses a shader-local halo rather than a post-processing pass. Its current default is `0.34`; post-processing bloom remains a possible Phase 4 decision.
 - Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but sustained frame-time profiling across GPUs remains a later performance task.
 
 ## Next

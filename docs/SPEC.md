@@ -30,7 +30,8 @@
 
 - Ordinary visits keep the artwork free of UI. `?debug=true` reveals a restrained, collapsible panel in the upper-right corner.
 - Implemented live parameters are density, size, flicker speed, highlight intensity, fine-point ratio, clustering, bright-layer halo intensity, wave strength, water-depth contrast, main reflection-band width, and local flicker correlation.
-- The current defaults use the accepted tuning supplied for this review (`density 0.72`, `size 1.45`, `highlightIntensity 2.53`, `clustering 0.06`, `bloomIntensity 0.22`, `waveStrength 1.49`, `finePointRatio 0.96`, `waterContrast 1.6`) plus art-directed defaults for reflection-band width (`0.78`) and local correlation (`0.72`).
+- The current defaults use the latest supplied tuning (`density 0.61`, `size 1.65`, `flickerSpeed 3`, `highlightIntensity 2.53`, `clustering 0`, `bloomIntensity 0.34`, `waveStrength 0.36`, `finePointRatio 0.96`, `waterContrast 1.6`, reflection-band width `0.76`, and local correlation `0.7`).
+- Flicker speed ranges from `0.1` to `6`. Both point-level envelopes and smooth neighborhood pulses respond to it; the upper half is intentionally an exploratory development range rather than an art-directed presentation default.
 - Reset restores those exact defaults. Copy exports the current parameters as formatted JSON.
 - Pointer breeze strength is shown as unavailable until Phase 3 and must not be represented by an inactive or misleading slider.
 - Control changes update the active `ShaderMaterial` uniforms without a reload or material recompilation.
@@ -49,7 +50,7 @@
 - A deterministic broken-field mask creates gaps, strings, and local patches inside the band without a hard silhouette.
 - Candidate activation depends on the same directional ripple field and approximate surface slope that shade the water.
 - Smooth low-frequency neighborhood pulses correlate nearby glints while retaining point-level phases and scale-specific timing.
-- Density remains `0.72` by default; spatial organization, not a global density increase, creates the stronger sun-glitter reading.
+- Density is reduced to `0.61` by default; spatial organization, not a global density increase, creates the stronger sun-glitter reading.
 
 ## Later-phase requirements
 

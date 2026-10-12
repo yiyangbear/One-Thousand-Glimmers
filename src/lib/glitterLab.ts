@@ -13,17 +13,17 @@ export type GlitterSettings = {
 }
 
 export const DEFAULT_GLITTER_SETTINGS: Readonly<GlitterSettings> = Object.freeze({
-  density: 0.72,
-  size: 1.45,
-  flickerSpeed: 1,
+  density: 0.61,
+  size: 1.65,
+  flickerSpeed: 3,
   highlightIntensity: 2.53,
-  clustering: 0.06,
-  bloomIntensity: 0.22,
-  waveStrength: 1.49,
+  clustering: 0,
+  bloomIntensity: 0.34,
+  waveStrength: 0.36,
   finePointRatio: 0.96,
   waterContrast: 1.6,
-  reflectionBandWidth: 0.78,
-  localCorrelation: 0.72,
+  reflectionBandWidth: 0.76,
+  localCorrelation: 0.7,
 })
 
 export function createDefaultGlitterSettings(): GlitterSettings {

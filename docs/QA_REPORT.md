@@ -150,3 +150,27 @@ Validation limitations:
 
 - Static screenshots cannot fully prove that neighboring glints feel organically correlated in motion; the shader mechanism and autonomous frame changes are verified, but prolonged viewing remains necessary.
 - Cross-browser/GPU frame-time profiling is still deferred to Phase 4/5.
+
+## Interim tuning — Faster flicker range
+
+Status: automated checks passed on 2026-10-12; human cadence acceptance pending. Phase 2 remains paused.
+
+Executed checks:
+
+- Adopted the supplied eleven-value parameter set as the exact reset/default state; unit expectations were updated accordingly.
+- Increased the point-envelope rate range from `0.48–1.72` to `0.68–2.18` and the correlated regional-pulse rate from `0.34–0.72` to `0.52–1.12`.
+- Expanded the live flicker-speed slider maximum from `3` to `6`; Playwright verifies the exposed range.
+- `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` — passed. Unit tests remain 2 files / 5 tests; the existing non-failing Vite chunk-size warning remains.
+- `npm run test:e2e` — passed in Playwright Chromium, 2 tests in 53.1 seconds. Console/page error collection and WebGL `getError() === 0` remain clean.
+- Dynamic cadence assertion — passed. With wave strength set to zero, browser screenshots taken 350 ms apart at speed `6` changed more than 1.5× as many sampled pixels as the same interval at speed `0.1`.
+- Screenshot inspection — passed; the supplied lower density and wave strength preserve the broken reflection band, quiet water, and three-level point hierarchy at both default speed `3` and exploratory speed `4.8`.
+
+Evidence:
+
+- `artifacts/screenshots/glint-cadence-default.png`
+- `artifacts/screenshots/glint-cadence-fast.png`
+- `artifacts/screenshots/glint-cadence-detail.png`
+
+Validation limitations:
+
+- Whether speed `3`, `4.8`, or another value best matches remembered sunlight remains a subjective motion judgment that requires live human viewing.

@@ -97,7 +97,7 @@ float reflectionEnvelope(vec2 uv) {
 
 float regionalPulseCorner(vec2 id, float tier, float time) {
   float phase = hash21(id + tier * 17.3) * PI * 2.0;
-  float rate = mix(0.34, 0.72, hash21(id + tier * 9.7 + 31.4));
+  float rate = mix(0.52, 1.12, hash21(id + tier * 9.7 + 31.4));
   return sin(time * uFlickerSpeed * rate + phase + sin(time * 0.11 + phase) * 0.3) * 0.5 + 0.5;
 }
 
@@ -116,7 +116,7 @@ float regionalPulse(vec2 uv, float tier, float time) {
 
 float temporalEnvelope(vec2 id, vec2 uv, float tier, float time) {
   float phase = hash21(id - 44.6) * PI * 2.0;
-  float rate = mix(0.48, 1.72, hash21(id + 92.8));
+  float rate = mix(0.68, 2.18, hash21(id + 92.8));
   float localTime = time * uFlickerSpeed;
   float signal = sin(localTime * rate + phase) * 0.52;
   signal += sin(localTime * rate * 0.413 + phase * 1.71) * 0.31;
