@@ -10,7 +10,7 @@ The water should feel materially present but visually recessive. The glimmers ca
 
 - **Water:** low-saturation deep blue-gray and cyan-gray; subtle value variation; no pure black.
 - **Light:** silver-white and warm white dominate; soft gold is rare and never orange or neon.
-- **Shape:** mostly tiny anisotropic flecks and short, soft facets; a few brighter, larger flashes; almost no regular stars.
+- **Shape:** mostly very small round or gently irregular points with crisp cores; fewer medium points and very rare larger flashes. Avoid repeated ellipses, crosses, and regular stars.
 - **Distribution:** a directional, broken reflection band with holes, clusters, and sparse outskirts. Never a uniform particle field.
 - **Motion:** evolving surface normals create local births, breaths, and extinctions. Positions feel anchored while intensity changes.
 - **Rhythm:** many overlapping time scales; no global pulse, hard popping, obvious loop, or frame-to-frame noise.
@@ -38,3 +38,9 @@ The river fills the viewport. The primary reflection band can sit off-center and
 
 Automatic checks can reject blank or structurally broken output, but final judgments on naturalism, restraint, and emotional fit require human review.
 
+## Current visual-refactor target
+
+- A dense foundation of sub-pixel and near-pixel glimmers should read as a broad field from afar, while local clustering remains visible up close.
+- Medium points provide rhythm; rare bright cores provide focus. Only the rare bright layer earns a restrained halo.
+- Point locations stay spatially stable. Their apparent life comes from independent compound temporal envelopes and changing normal response.
+- Water should sit deeper than the lights: cool deep blue-gray with cyan-gray lift, slow low-frequency depth variation, and very subtle multi-directional surface texture.

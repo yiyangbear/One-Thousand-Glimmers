@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import fragmentShader from '../shaders/glimmerWater.frag?raw'
 import vertexShader from '../shaders/fullscreen.vert?raw'
-import type { GlitterSettings } from '../lib/glitterLab'
+import { DEFAULT_GLITTER_SETTINGS, type GlitterSettings } from '../lib/glitterLab'
 
 const MAX_PIXEL_RATIO = 1.75
 
@@ -17,13 +17,15 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
     () => ({
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(1, 1) },
-      uDensity: { value: 1 },
-      uGlimmerSize: { value: 1 },
-      uFlickerSpeed: { value: 1 },
-      uHighlightIntensity: { value: 1 },
-      uClustering: { value: 1 },
-      uBloomIntensity: { value: 0 },
-      uWaveStrength: { value: 1 },
+      uDensity: { value: DEFAULT_GLITTER_SETTINGS.density },
+      uGlimmerSize: { value: DEFAULT_GLITTER_SETTINGS.size },
+      uFlickerSpeed: { value: DEFAULT_GLITTER_SETTINGS.flickerSpeed },
+      uHighlightIntensity: { value: DEFAULT_GLITTER_SETTINGS.highlightIntensity },
+      uClustering: { value: DEFAULT_GLITTER_SETTINGS.clustering },
+      uBloomIntensity: { value: DEFAULT_GLITTER_SETTINGS.bloomIntensity },
+      uWaveStrength: { value: DEFAULT_GLITTER_SETTINGS.waveStrength },
+      uFinePointRatio: { value: DEFAULT_GLITTER_SETTINGS.finePointRatio },
+      uWaterContrast: { value: DEFAULT_GLITTER_SETTINGS.waterContrast },
     }),
     [],
   )
@@ -39,6 +41,8 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
     shader.uniforms.uClustering.value = settings.clustering
     shader.uniforms.uBloomIntensity.value = settings.bloomIntensity
     shader.uniforms.uWaveStrength.value = settings.waveStrength
+    shader.uniforms.uFinePointRatio.value = settings.finePointRatio
+    shader.uniforms.uWaterContrast.value = settings.waterContrast
     gl.domElement.dataset.visualSettings = JSON.stringify(settings)
   }, [gl, settings])
 

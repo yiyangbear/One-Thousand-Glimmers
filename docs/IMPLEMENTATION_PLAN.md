@@ -49,6 +49,17 @@ This user-requested development tool is implemented after Phase 1 and does not b
 - Verify actual final-frame pixel changes, JSON copy/reset behavior, hidden normal mode, console health, and WebGL health with Playwright.
 - Pause again for human acceptance; do not continue into Phase 2.
 
+## Interim milestone — Visual refactor
+
+This user-requested revision follows Glitter Lab and remains outside Phase 2.
+
+- Replace single-scale elongated glints with three near-circular, stable spatial layers.
+- Increase the fine-point population while preserving clustered reflection geometry and negative space.
+- Use compound, scale-specific temporal envelopes and reserve halo energy for rare bright events.
+- Deepen and layer the river color/texture without drawing wave lines.
+- Add fine-point ratio and water-depth contrast controls to Glitter Lab.
+- Save default, recommended, and detail screenshots; rerun the full QA workflow and pause for art acceptance.
+
 ## Phase 3 — Pointer breeze
 
 - Track bounded pointer velocity and feed a local disturbance field.

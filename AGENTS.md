@@ -9,6 +9,8 @@ Build a quiet, full-screen generative artwork drawn from sunlight glimmering on 
 - The water is low-saturation deep blue-gray / cyan-gray, never a pure-black void.
 - Highlights are mostly silver and warm white, with only sparse muted gold.
 - Highlights vary in scale and cluster density. They appear and fade near stable spatial locations rather than travelling as particles.
+- Preserve the three-layer point hierarchy: dense tiny near-round cores, fewer medium glints, and very rare bright focal points. Avoid ellipse fields, crosses, and grid-boundary artifacts.
+- Glow belongs primarily to the rare bright layer; never wrap every point in a pale enlarged copy.
 - Water motion comes from a continuous, multi-scale procedural field. Deterministic seeds are required for repeatable QA.
 - Avoid neon, sci-fi particles, snow, meteors, regular star shapes, conspicuous wave stripes, heavy bloom, synchronized flashing, and obvious loops.
 - Pointer input is a subtle breeze with bounded strength plus spatial and temporal decay. No splashes, jelly deformation, ring waves, or particle trails.

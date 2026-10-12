@@ -18,9 +18,11 @@ const CONTROLS: readonly ImplementedControl[] = [
   { key: 'size', label: '光点大小', min: 0.5, max: 2, step: 0.01 },
   { key: 'flickerSpeed', label: '闪烁速度', min: 0.1, max: 3, step: 0.01 },
   { key: 'highlightIntensity', label: '高光强度', min: 0, max: 3, step: 0.01 },
+  { key: 'finePointRatio', label: '微光占比', min: 0.2, max: 1.2, step: 0.01 },
   { key: 'clustering', label: '光点聚集程度', min: 0, max: 2, step: 0.01 },
-  { key: 'bloomIntensity', label: 'Bloom 辉光强度', min: 0, max: 1.5, step: 0.01 },
+  { key: 'bloomIntensity', label: '高亮辉光强度', min: 0, max: 1.5, step: 0.01 },
   { key: 'waveStrength', label: '水波起伏强度', min: 0, max: 2, step: 0.01 },
+  { key: 'waterContrast', label: '水面深浅层次', min: 0.3, max: 2, step: 0.01 },
 ]
 
 type GlitterLabProps = {
@@ -128,4 +130,3 @@ export function GlitterLab({ settings, onChange }: GlitterLabProps) {
     </aside>
   )
 }
-

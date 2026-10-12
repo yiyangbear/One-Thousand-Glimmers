@@ -6,15 +6,17 @@ import {
 } from './glitterLab'
 
 describe('Glitter Lab settings', () => {
-  it('preserves the Phase 1 look as its defaults', () => {
+  it('stores the art-directed multi-layer defaults', () => {
     expect(DEFAULT_GLITTER_SETTINGS).toEqual({
       density: 1,
       size: 1,
       flickerSpeed: 1,
       highlightIntensity: 1,
       clustering: 1,
-      bloomIntensity: 0,
+      bloomIntensity: 0.32,
       waveStrength: 1,
+      finePointRatio: 0.82,
+      waterContrast: 1.15,
     })
   })
 
@@ -27,4 +29,3 @@ describe('Glitter Lab settings', () => {
     expect(JSON.parse(serializeGlitterSettings(second))).toEqual(DEFAULT_GLITTER_SETTINGS)
   })
 })
-

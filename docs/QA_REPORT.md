@@ -81,3 +81,37 @@ Validation limitations:
 
 - Naturalness at extreme parameter values is not guaranteed; Glitter Lab intentionally permits exploratory values outside the art-directed default.
 - Mouse breeze remains unimplemented and has no slider, as required.
+
+## Interim milestone — Visual refactor
+
+Status: automated checks passed on 2026-10-12; human art acceptance pending. Phase 2 remains paused.
+
+Executed checks:
+
+- Architecture inspection — passed; the same full-screen shader and stable-uniform path are retained. The visual field is now divided into fine, medium, and bright procedural layers without per-frame object allocation.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 2 files / 5 tests. Glitter Lab defaults and JSON now include fine-point ratio and water contrast.
+- `npm run build` — passed. Output JS is 1,120.76 kB / 311.97 kB gzip; the existing non-failing chunk-size warning remains.
+- `npm run test:e2e` — passed in Playwright Chromium, 2 tests. Nine live sliders, clipboard/reset behavior, hidden normal mode, WebGL state, console health, actual final-frame parameter response, and three screenshots were verified.
+- Screenshot repair cycle — the first refactor candidate failed visual inspection because unbounded derivative anti-aliasing illuminated cell boundaries as crosses and grid scratches. Capping the point-edge derivative and increasing the true fine-point radius removed those artifacts; Playwright checks and screenshots were rerun.
+- Final screenshot inspection — passed structural checks: highlights are discrete near-round points with clear fine/medium/rare-bright hierarchy; no ellipses dominate; no crosses, grid boundaries, obvious wave lines, blank frames, or large clipped fields remain.
+- ImageMagick analysis — default and recommended images are 1440×900 with 2,608 and 2,768 colors. Their means are 0.2665 and 0.2671, confirming a substantially deeper base than the previous ~0.34–0.36 field without collapsing into black. The 600×520 detail contains 1,169 colors.
+
+Evidence:
+
+- `artifacts/screenshots/visual-refactor-default.png`
+- `artifacts/screenshots/visual-refactor-optimized.png`
+- `artifacts/screenshots/visual-refactor-detail.png`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Art-direction review:
+
+- Fine-point density and multi-scale hierarchy are materially stronger while the reflection band remains uneven and locally clustered.
+- Glow is limited to rare bright events; it does not create a universal pale shell around every point.
+- Water is darker, cooler, and more varied. Final naturalness, long-duration comfort, and the preferred density still require human review.
+
+Validation limitations:
+
+- Automated screenshots validate structure, not the full subjective quality of several minutes of motion.
+- Sustained frame-time profiling across integrated and discrete GPUs remains outstanding.

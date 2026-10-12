@@ -29,11 +29,19 @@
 ## Glitter Lab development milestone
 
 - Ordinary visits keep the artwork free of UI. `?debug=true` reveals a restrained, collapsible panel in the upper-right corner.
-- Implemented live parameters are density, size, flicker speed, highlight intensity, clustering, local bloom intensity, and wave strength.
-- The default values reproduce the Phase 1 shader constants: all multipliers are `1`, except bloom at `0`.
+- Implemented live parameters are density, size, flicker speed, highlight intensity, fine-point ratio, clustering, bright-layer halo intensity, wave strength, and water-depth contrast.
+- The current defaults reproduce the visual-refactor candidate: core multipliers remain `1`, bloom is `0.32`, fine-point ratio is `0.82`, and water contrast is `1.15`.
 - Reset restores those exact defaults. Copy exports the current parameters as formatted JSON.
 - Pointer breeze strength is shown as unavailable until Phase 3 and must not be represented by an inactive or misleading slider.
 - Control changes update the active `ShaderMaterial` uniforms without a reload or material recompilation.
+
+## Visual-refactor requirements
+
+- Replace the repeated elongated-facet field with three deterministic, spatially stable point layers: dense fine points, a lower-count medium layer, and rare bright focal points.
+- Fine and medium layers use near-circular cores with small controlled irregularity; no grid boundaries, crosses, star sprites, or obvious ellipses may appear.
+- Each scale has a distinct compound temporal envelope. Time changes intensity only; sampling positions remain fixed.
+- Halo energy comes only from the rare bright layer and is gated by its strongest moments.
+- Water uses a deeper cool blue-gray/cyan-gray palette plus low-, middle-, and fine-scale tonal variation. Surface normals remain subtly perceptible without explicit wave lines.
 
 ## Later-phase requirements
 

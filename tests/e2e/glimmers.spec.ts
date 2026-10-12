@@ -61,12 +61,12 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   const panel = page.getByLabel('Glitter Lab 开发面板')
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(panel).toBeVisible()
-  await expect(panel.locator('input[type="range"]')).toHaveCount(7)
+  await expect(panel.locator('input[type="range"]')).toHaveCount(9)
   await expect(panel.getByText('未实现 · Phase 3')).toBeVisible()
 
   await page.waitForTimeout(900)
   await page.screenshot({
-    path: 'artifacts/screenshots/glitter-lab-default.png',
+    path: 'artifacts/screenshots/visual-refactor-default.png',
     fullPage: true,
   })
 
@@ -100,13 +100,15 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(boostedBrightPixels).toBeGreaterThan(mutedBrightPixels + 50)
 
   const exportedSettings = {
-    density: 1.35,
-    size: 1.45,
-    flickerSpeed: 2.2,
-    highlightIntensity: 1.4,
-    clustering: 1.6,
-    bloomIntensity: 0.8,
-    waveStrength: 0.7,
+    density: 1.28,
+    size: 0.84,
+    flickerSpeed: 0.9,
+    highlightIntensity: 1.18,
+    clustering: 1.15,
+    bloomIntensity: 0.42,
+    waveStrength: 1.12,
+    finePointRatio: 0.95,
+    waterContrast: 1.28,
   }
 
   for (const [key, value] of Object.entries(exportedSettings)) {
@@ -114,8 +116,12 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   }
   await page.waitForTimeout(180)
   await page.screenshot({
-    path: 'artifacts/screenshots/glitter-lab-adjusted.png',
+    path: 'artifacts/screenshots/visual-refactor-optimized.png',
     fullPage: true,
+  })
+  await page.screenshot({
+    path: 'artifacts/screenshots/visual-refactor-detail.png',
+    clip: { x: 420, y: 180, width: 600, height: 520 },
   })
 
   await panel.getByRole('button', { name: '复制当前参数' }).click()
@@ -125,7 +131,8 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
 
   await panel.getByRole('button', { name: '恢复默认' }).click()
   await expect(page.getByTestId('control-density')).toHaveValue('1')
-  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0')
+  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.32')
+  await expect(page.getByTestId('control-finePointRatio')).toHaveValue('0.82')
 
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeHidden()
