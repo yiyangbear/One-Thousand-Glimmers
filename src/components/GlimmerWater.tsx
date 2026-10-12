@@ -26,6 +26,8 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
       uWaveStrength: { value: DEFAULT_GLITTER_SETTINGS.waveStrength },
       uFinePointRatio: { value: DEFAULT_GLITTER_SETTINGS.finePointRatio },
       uWaterContrast: { value: DEFAULT_GLITTER_SETTINGS.waterContrast },
+      uReflectionBandWidth: { value: DEFAULT_GLITTER_SETTINGS.reflectionBandWidth },
+      uLocalCorrelation: { value: DEFAULT_GLITTER_SETTINGS.localCorrelation },
     }),
     [],
   )
@@ -43,6 +45,8 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
     shader.uniforms.uWaveStrength.value = settings.waveStrength
     shader.uniforms.uFinePointRatio.value = settings.finePointRatio
     shader.uniforms.uWaterContrast.value = settings.waterContrast
+    shader.uniforms.uReflectionBandWidth.value = settings.reflectionBandWidth
+    shader.uniforms.uLocalCorrelation.value = settings.localCorrelation
     gl.domElement.dataset.visualSettings = JSON.stringify(settings)
   }, [gl, settings])
 

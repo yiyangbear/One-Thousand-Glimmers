@@ -11,6 +11,8 @@ uniform float uBloomIntensity;
 uniform float uWaveStrength;
 uniform float uFinePointRatio;
 uniform float uWaterContrast;
+uniform float uReflectionBandWidth;
+uniform float uLocalCorrelation;
 
 varying vec2 vUv;
 
@@ -53,6 +55,16 @@ float quietFbm(vec2 p) {
   return value;
 }
 
+float directionalRipple(vec2 p, float time) {
+  vec2 direction = normalize(vec2(0.18, 0.98));
+  vec2 across = vec2(-direction.y, direction.x);
+  float warp = sin(dot(p, across) * 7.5 + time * 0.08) * 0.55;
+  float primary = sin(dot(p, direction) * 58.0 + warp - time * 0.42);
+  float secondary = sin(dot(p, direction) * 81.0 + sin(dot(p, across) * 11.0 - 1.4) * 0.35 - time * 0.55) * 0.45;
+  float crossing = sin(dot(p, normalize(vec2(0.27, 0.96))) * 37.0 + time * 0.26) * 0.22;
+  return (primary + secondary + crossing) / 1.67;
+}
+
 float waterHeight(vec2 p, float time) {
   vec2 warped = p + vec2(
     sin(p.y * 4.3 + time * 0.09),
@@ -60,8 +72,8 @@ float waterHeight(vec2 p, float time) {
   ) * 0.025;
   float broad = sin(dot(warped, normalize(vec2(0.84, 0.54))) * 8.5 + time * 0.17) * 0.46;
   broad += sin(dot(warped, normalize(vec2(-0.63, 0.78))) * 14.0 - time * 0.21 + 1.7) * 0.28;
-  float middle = sin(dot(warped, normalize(vec2(0.97, -0.25))) * 31.0 + time * 0.34 + sin(p.y * 3.0)) * 0.17;
-  float fine = sin(dot(warped, normalize(vec2(0.42, 0.91))) * 67.0 - time * 0.49 + sin(p.x * 8.0) * 0.22) * 0.07;
+  float middle = sin(dot(warped, normalize(vec2(0.25, 0.97))) * 31.0 + time * 0.34 + sin(p.x * 3.0)) * 0.17;
+  float fine = directionalRipple(warped, time) * 0.105;
   return broad + middle + fine;
 }
 
@@ -74,18 +86,35 @@ vec2 waterSlope(vec2 p, float time) {
   return vec2(right - left, up - down) / (2.0 * epsilon) * 0.008;
 }
 
-float reflectionEnvelope(vec2 uv, float cluster) {
+float reflectionEnvelope(vec2 uv) {
   float vertical = smoothstep(0.01, 0.18, uv.y) * (1.0 - smoothstep(0.88, 1.03, uv.y));
   float center = 0.56 + (uv.y - 0.5) * 0.085 + sin(uv.y * 8.0 + 0.6) * 0.012;
-  float width = mix(0.19, 0.055, smoothstep(0.04, 0.96, uv.y));
-  float lateral = exp(-pow(abs(uv.x - center) / width, 1.55));
-  float broken = smoothstep(0.25, 0.78, cluster) * 0.72 + 0.28;
-  float clustered = mix(1.0, broken, min(uClustering, 1.0));
-  clustered *= mix(1.0, broken * broken, max(uClustering - 1.0, 0.0));
-  return vertical * lateral * clustered;
+  float width = mix(0.17, 0.045, smoothstep(0.04, 0.96, uv.y));
+  width *= uReflectionBandWidth;
+  float lateral = exp(-pow(abs(uv.x - center) / max(width, 0.001), 1.62));
+  return vertical * lateral;
 }
 
-float temporalEnvelope(vec2 id, float tier, float time) {
+float regionalPulseCorner(vec2 id, float tier, float time) {
+  float phase = hash21(id + tier * 17.3) * PI * 2.0;
+  float rate = mix(0.34, 0.72, hash21(id + tier * 9.7 + 31.4));
+  return sin(time * uFlickerSpeed * rate + phase + sin(time * 0.11 + phase) * 0.3) * 0.5 + 0.5;
+}
+
+float regionalPulse(vec2 uv, float tier, float time) {
+  float aspect = uResolution.x / max(uResolution.y, 1.0);
+  vec2 region = vec2((uv.x - 0.5) * aspect, uv.y - 0.5) * vec2(7.0, 8.0);
+  vec2 id = floor(region);
+  vec2 f = fract(region);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(regionalPulseCorner(id, tier, time), regionalPulseCorner(id + vec2(1.0, 0.0), tier, time), f.x),
+    mix(regionalPulseCorner(id + vec2(0.0, 1.0), tier, time), regionalPulseCorner(id + vec2(1.0), tier, time), f.x),
+    f.y
+  );
+}
+
+float temporalEnvelope(vec2 id, vec2 uv, float tier, float time) {
   float phase = hash21(id - 44.6) * PI * 2.0;
   float rate = mix(0.48, 1.72, hash21(id + 92.8));
   float localTime = time * uFlickerSpeed;
@@ -94,20 +123,20 @@ float temporalEnvelope(vec2 id, float tier, float time) {
   signal += sin(localTime * 0.13 + phase * 0.37) * 0.17;
   signal = signal * 0.5 + 0.5;
 
-  if (tier < 0.5) {
-    return 0.2 + smoothstep(0.14, 0.88, signal) * 0.8;
-  }
-  if (tier < 1.5) {
-    return smoothstep(0.26, 0.93, signal);
-  }
-  return pow(smoothstep(0.57, 0.97, signal), 1.45);
+  float individual;
+  if (tier < 0.5) individual = 0.18 + smoothstep(0.14, 0.88, signal) * 0.82;
+  else if (tier < 1.5) individual = smoothstep(0.26, 0.93, signal);
+  else individual = pow(smoothstep(0.57, 0.97, signal), 1.45);
+
+  float shared = mix(0.42, 1.22, regionalPulse(uv, tier, time));
+  return clamp(individual * mix(1.0, shared, uLocalCorrelation), 0.0, 1.24);
 }
 
 float glimmerLayer(
   vec2 uv,
   vec2 slope,
   float time,
-  float envelope,
+  float activity,
   float tier,
   out float halo,
   out float warmth
@@ -115,19 +144,19 @@ float glimmerLayer(
   float aspect = uResolution.x / max(uResolution.y, 1.0);
   vec2 field = vec2((uv.x - 0.5) * aspect, uv.y - 0.5);
   float gridScale = 168.0;
-  float density = mix(0.055, 0.48, sqrt(envelope)) * mix(0.35, 1.2, uFinePointRatio);
+  float density = mix(0.0015, 0.62, pow(activity, 0.8)) * mix(0.35, 1.2, uFinePointRatio);
   float minSize = 0.068;
   float maxSize = 0.128;
 
   if (tier > 0.5) {
     gridScale = 92.0;
-    density = mix(0.012, 0.145, envelope) * mix(1.25, 0.72, uFinePointRatio);
+    density = mix(0.00025, 0.18, pow(activity, 1.05)) * mix(1.25, 0.72, uFinePointRatio);
     minSize = 0.09;
     maxSize = 0.18;
   }
   if (tier > 1.5) {
     gridScale = 48.0;
-    density = mix(0.0025, 0.034, envelope) * mix(1.3, 0.78, uFinePointRatio);
+    density = mix(0.00003, 0.045, pow(activity, 1.25)) * mix(1.3, 0.78, uFinePointRatio);
     minSize = 0.095;
     maxSize = 0.19;
   }
@@ -158,7 +187,7 @@ float glimmerLayer(
       float edge = clamp(fwidth(shapedDistance) * 0.72, 0.03, 0.16);
       float core = 1.0 - smoothstep(0.72 - edge, 1.0 + edge, shapedDistance);
       float present = step(1.0 - density, hash21(id + 127.1));
-      float flicker = temporalEnvelope(id, tier, time);
+      float flicker = temporalEnvelope(id, uv, tier, time);
 
       vec2 desiredSlope = vec2(-0.105, 0.018);
       float normalMatch = exp(-dot(slope - desiredSlope, slope - desiredSlope) * 185.0);
@@ -191,28 +220,39 @@ void main() {
   float depthField = quietFbm(waterPosition * vec2(1.25, 0.92) + vec2(uTime * 0.006, -1.7));
   float crossField = quietFbm(waterPosition * vec2(3.4, 5.2) + vec2(-2.3, uTime * 0.009));
   float microField = valueNoise(waterPosition * vec2(19.0, 31.0) + vec2(uTime * 0.022, -uTime * 0.015));
+  float rippleField = directionalRipple(waterPosition, uTime);
   float slopeShade = clamp(0.5 + slope.y * 1.65 - slope.x * 0.58, 0.0, 1.0);
   float tone = 0.35;
   tone += (depthField - 0.5) * 0.58 * uWaterContrast;
-  tone += (crossField - 0.5) * 0.13 * uWaterContrast;
-  tone += (microField - 0.5) * 0.045 * uWaterContrast;
+  tone += (crossField - 0.5) * 0.16 * uWaterContrast;
+  tone += (microField - 0.5) * 0.052 * uWaterContrast;
+  tone += rippleField * 0.041 * uWaveStrength;
   tone += (slopeShade - 0.5) * 0.11 * uWaveStrength;
   vec3 deepWater = vec3(0.018, 0.052, 0.068);
   vec3 liftedWater = vec3(0.068, 0.132, 0.15);
   vec3 color = mix(deepWater, liftedWater, clamp(tone, 0.02, 0.9));
   color += vec3(-0.004, 0.006, 0.01) * (crossField - 0.45) * uWaterContrast;
+  color += vec3(0.009, 0.012, 0.01) * rippleField * uWaveStrength;
 
-  float cluster = quietFbm(vUv * vec2(3.1, 2.25) + vec2(4.7, -2.1));
-  float envelope = reflectionEnvelope(vUv, cluster);
+  float envelope = reflectionEnvelope(vUv);
+  float patchNoise = quietFbm(vec2(vUv.x * 4.2 + vUv.y * 0.65, vUv.y * 6.4) + vec2(4.7, -2.1));
+  float rippleAffinity = smoothstep(0.28, 0.8, rippleField * 0.5 + 0.5);
+  float patchMask = smoothstep(0.38, 0.76, patchNoise + rippleAffinity * 0.13);
+  float brokenField = mix(0.54 + patchMask * 0.46, 0.12 + patchMask * 0.88, clamp(uClustering, 0.0, 1.0));
+  brokenField *= mix(1.0, 0.55 + patchMask * patchMask * 0.75, max(uClustering - 1.0, 0.0));
+  vec2 desiredSlope = vec2(-0.105, 0.018);
+  float normalMatch = exp(-dot(slope - desiredSlope, slope - desiredSlope) * 150.0);
+  float surfaceAttachment = mix(0.28, 1.0, normalMatch) * mix(0.42, 1.0, rippleAffinity);
+  float activity = clamp(envelope * brokenField * surfaceAttachment, 0.0, 1.0);
   float fineHalo = 0.0;
   float fineWarmth = 0.0;
   float mediumHalo = 0.0;
   float mediumWarmth = 0.0;
   float brightHalo = 0.0;
   float brightWarmth = 0.0;
-  float fine = glimmerLayer(vUv, slope, uTime, envelope, 0.0, fineHalo, fineWarmth);
-  float medium = glimmerLayer(vUv, slope, uTime, envelope, 1.0, mediumHalo, mediumWarmth);
-  float bright = glimmerLayer(vUv, slope, uTime, envelope, 2.0, brightHalo, brightWarmth);
+  float fine = glimmerLayer(vUv, slope, uTime, activity, 0.0, fineHalo, fineWarmth);
+  float medium = glimmerLayer(vUv, slope, uTime, activity, 1.0, mediumHalo, mediumWarmth);
+  float bright = glimmerLayer(vUv, slope, uTime, activity, 2.0, brightHalo, brightWarmth);
 
   vec3 coolSilver = vec3(0.72, 0.8, 0.82);
   vec3 clearSilver = vec3(0.9, 0.93, 0.89);

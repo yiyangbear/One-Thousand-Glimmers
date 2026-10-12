@@ -29,8 +29,8 @@
 ## Glitter Lab development milestone
 
 - Ordinary visits keep the artwork free of UI. `?debug=true` reveals a restrained, collapsible panel in the upper-right corner.
-- Implemented live parameters are density, size, flicker speed, highlight intensity, fine-point ratio, clustering, bright-layer halo intensity, wave strength, and water-depth contrast.
-- The current defaults reproduce the visual-refactor candidate: core multipliers remain `1`, bloom is `0.32`, fine-point ratio is `0.82`, and water contrast is `1.15`.
+- Implemented live parameters are density, size, flicker speed, highlight intensity, fine-point ratio, clustering, bright-layer halo intensity, wave strength, water-depth contrast, main reflection-band width, and local flicker correlation.
+- The current defaults use the accepted tuning supplied for this review (`density 0.72`, `size 1.45`, `highlightIntensity 2.53`, `clustering 0.06`, `bloomIntensity 0.22`, `waveStrength 1.49`, `finePointRatio 0.96`, `waterContrast 1.6`) plus art-directed defaults for reflection-band width (`0.78`) and local correlation (`0.72`).
 - Reset restores those exact defaults. Copy exports the current parameters as formatted JSON.
 - Pointer breeze strength is shown as unavailable until Phase 3 and must not be represented by an inactive or misleading slider.
 - Control changes update the active `ShaderMaterial` uniforms without a reload or material recompilation.
@@ -42,6 +42,14 @@
 - Each scale has a distinct compound temporal envelope. Time changes intensity only; sampling positions remain fixed.
 - Halo energy comes only from the rare bright layer and is gated by its strongest moments.
 - Water uses a deeper cool blue-gray/cyan-gray palette plus low-, middle-, and fine-scale tonal variation. Surface normals remain subtly perceptible without explicit wave lines.
+
+## Sun-glitter spatial-organization requirements
+
+- A tapered soft reflection envelope concentrates nearly all glints into an off-center active band; outside it, only a near-zero residual candidate rate remains.
+- A deterministic broken-field mask creates gaps, strings, and local patches inside the band without a hard silhouette.
+- Candidate activation depends on the same directional ripple field and approximate surface slope that shade the water.
+- Smooth low-frequency neighborhood pulses correlate nearby glints while retaining point-level phases and scale-specific timing.
+- Density remains `0.72` by default; spatial organization, not a global density increase, creates the stronger sun-glitter reading.
 
 ## Later-phase requirements
 

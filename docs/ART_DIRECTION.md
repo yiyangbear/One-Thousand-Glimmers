@@ -38,9 +38,10 @@ The river fills the viewport. The primary reflection band can sit off-center and
 
 Automatic checks can reject blank or structurally broken output, but final judgments on naturalism, restraint, and emotional fit require human review.
 
-## Current visual-refactor target
+## Current sun-glitter-field target
 
-- A dense foundation of sub-pixel and near-pixel glimmers should read as a broad field from afar, while local clustering remains visible up close.
+- Tiny glimmers belong primarily to a tapered, broken reflection band. Outside it, water and negative space dominate; global starfield coverage is a failure.
 - Medium points provide rhythm; rare bright cores provide focus. Only the rare bright layer earns a restrained halo.
-- Point locations stay spatially stable. Their apparent life comes from independent compound temporal envelopes and changing normal response.
-- Water should sit deeper than the lights: cool deep blue-gray with cyan-gray lift, slow low-frequency depth variation, and very subtle multi-directional surface texture.
+- Point locations stay spatially stable. Their apparent life comes from individual envelopes blended with a smooth neighborhood pulse, so small patches wake together without synchronizing the frame.
+- Fine-scale glint eligibility follows the same directional ripple field and slope response used to shade the water. Highlights must feel selected from the surface, not composited over it.
+- Water should sit deeper than the lights: cool gray-blue, cyan-gray, and restrained gray-green, with low-frequency depth plus fine directional ripple structure that never turns into drawn wave lines.

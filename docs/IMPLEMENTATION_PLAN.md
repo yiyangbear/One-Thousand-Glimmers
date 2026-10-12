@@ -60,6 +60,16 @@ This user-requested revision follows Glitter Lab and remains outside Phase 2.
 - Add fine-point ratio and water-depth contrast controls to Glitter Lab.
 - Save default, recommended, and detail screenshots; rerun the full QA workflow and pause for art acceptance.
 
+## Interim milestone — Sun-glitter spatial organization
+
+This user-requested revision follows the point-shape refactor and remains outside Phase 2.
+
+- Replace the remaining full-screen fine-point floor with a soft, tapered reflection region and near-empty outskirts.
+- Derive broken patches and point eligibility from directional ripples, surface slope, and deterministic low-frequency fields.
+- Blend individual flicker with smooth neighborhood pulses so nearby sites become active together.
+- Add reflection-band width and local-correlation controls without increasing the global default density above `0.72`.
+- Save default, recommended, and detail screenshots; rerun the full QA workflow and pause for art acceptance.
+
 ## Phase 3 — Pointer breeze
 
 - Track bounded pointer velocity and feed a local disturbance field.

@@ -10,6 +10,8 @@ Build a quiet, full-screen generative artwork drawn from sunlight glimmering on 
 - Highlights are mostly silver and warm white, with only sparse muted gold.
 - Highlights vary in scale and cluster density. They appear and fade near stable spatial locations rather than travelling as particles.
 - Preserve the three-layer point hierarchy: dense tiny near-round cores, fewer medium glints, and very rare bright focal points. Avoid ellipse fields, crosses, and grid-boundary artifacts.
+- Concentrate glints inside a soft, broken, tapered reflection band. Preserve broad quiet water outside it; a full-screen starfield or particle-field reading is a regression.
+- Couple glint activity to the same directional ripple and slope fields that describe the water, and preserve local temporal correlation without global synchronization.
 - Glow belongs primarily to the rare bright layer; never wrap every point in a pale enlarged copy.
 - Water motion comes from a continuous, multi-scale procedural field. Deterministic seeds are required for repeatable QA.
 - Avoid neon, sci-fi particles, snow, meteors, regular star shapes, conspicuous wave stripes, heavy bloom, synchronized flashing, and obvious loops.

@@ -115,3 +115,38 @@ Validation limitations:
 
 - Automated screenshots validate structure, not the full subjective quality of several minutes of motion.
 - Sustained frame-time profiling across integrated and discrete GPUs remains outstanding.
+
+## Interim milestone — Sun-glitter spatial organization
+
+Status: automated checks passed on 2026-10-12; human art acceptance pending. Phase 2 remains paused.
+
+Executed checks:
+
+- Architecture inspection — passed; the work remains inside the existing full-screen shader, Glitter Lab state model, and live-uniform update path. No particle objects or per-frame populations were introduced.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 2 files / 5 tests. Exact defaults and JSON coverage now include reflection-band width and local flicker correlation.
+- `npm run build` — passed. Output JS is 1,123.35 kB / 312.63 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- `npm run test:e2e` — passed in Playwright Chromium, 2 tests. Eleven working sliders, clipboard/reset behavior, hidden normal mode, WebGL state, console health, actual final-frame parameter response, and three screenshots were verified.
+- Test repair cycle — the first full browser run completed all expensive screenshot/clipboard/reset work but hit the original 30-second timeout on the final panel re-open. The screenshot-heavy test now has a 60-second limit; it reran successfully in 33.3 seconds. No visual or runtime assertion was bypassed.
+- Screenshot inspection — passed structural checks: a tapered, broken, off-center active band replaces the uniform full-screen field; quiet water occupies most of the frame; fine, medium, and rare bright points remain distinct; restrained directional water texture is visible without hard wave outlines.
+- ImageMagick structural analysis — all images are nonblank. Default and recommended screenshots are 1440×900 with 3,725 and 3,225 colors, means 0.2617 and 0.2633, and luminance extrema within 0.0588–1.0. The 560×560 detail contains 1,213 colors.
+
+Evidence:
+
+- `artifacts/screenshots/glint-field-default.png`
+- `artifacts/screenshots/glint-field-optimized.png`
+- `artifacts/screenshots/glint-field-detail.png`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Art-direction review:
+
+- The near-zero outside-band candidate floor materially reduces the previous starfield reading while preserving occasional peripheral glints.
+- Ripple affinity, slope matching, and broken-field masking create visible strings and local patches within the reflection region.
+- Only the rare bright layer produces a halo; most points remain crisp and small.
+- Final judgment of naturalism, patch timing over several minutes, and emotional fit remains a human art-acceptance item.
+
+Validation limitations:
+
+- Static screenshots cannot fully prove that neighboring glints feel organically correlated in motion; the shader mechanism and autonomous frame changes are verified, but prolonged viewing remains necessary.
+- Cross-browser/GPU frame-time profiling is still deferred to Phase 4/5.

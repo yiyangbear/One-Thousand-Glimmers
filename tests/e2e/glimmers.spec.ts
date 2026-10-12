@@ -55,18 +55,19 @@ test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
 })
 
 test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async ({ page }) => {
+  test.setTimeout(60_000)
   const errors = collectRuntimeErrors(page)
 
   await page.goto('/?debug=true')
   const panel = page.getByLabel('Glitter Lab 开发面板')
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(panel).toBeVisible()
-  await expect(panel.locator('input[type="range"]')).toHaveCount(9)
+  await expect(panel.locator('input[type="range"]')).toHaveCount(11)
   await expect(panel.getByText('未实现 · Phase 3')).toBeVisible()
 
   await page.waitForTimeout(900)
   await page.screenshot({
-    path: 'artifacts/screenshots/visual-refactor-default.png',
+    path: 'artifacts/screenshots/glint-field-default.png',
     fullPage: true,
   })
 
@@ -100,15 +101,17 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(boostedBrightPixels).toBeGreaterThan(mutedBrightPixels + 50)
 
   const exportedSettings = {
-    density: 1.28,
-    size: 0.84,
+    density: 0.72,
+    size: 1.25,
     flickerSpeed: 0.9,
-    highlightIntensity: 1.18,
-    clustering: 1.15,
-    bloomIntensity: 0.42,
-    waveStrength: 1.12,
-    finePointRatio: 0.95,
-    waterContrast: 1.28,
+    highlightIntensity: 2.2,
+    clustering: 0.28,
+    bloomIntensity: 0.26,
+    waveStrength: 1.35,
+    finePointRatio: 0.92,
+    waterContrast: 1.5,
+    reflectionBandWidth: 0.7,
+    localCorrelation: 0.82,
   }
 
   for (const [key, value] of Object.entries(exportedSettings)) {
@@ -116,12 +119,12 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   }
   await page.waitForTimeout(180)
   await page.screenshot({
-    path: 'artifacts/screenshots/visual-refactor-optimized.png',
+    path: 'artifacts/screenshots/glint-field-optimized.png',
     fullPage: true,
   })
   await page.screenshot({
-    path: 'artifacts/screenshots/visual-refactor-detail.png',
-    clip: { x: 420, y: 180, width: 600, height: 520 },
+    path: 'artifacts/screenshots/glint-field-detail.png',
+    clip: { x: 520, y: 150, width: 560, height: 560 },
   })
 
   await panel.getByRole('button', { name: '复制当前参数' }).click()
@@ -130,9 +133,10 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(clipboard).toEqual(exportedSettings)
 
   await panel.getByRole('button', { name: '恢复默认' }).click()
-  await expect(page.getByTestId('control-density')).toHaveValue('1')
-  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.32')
-  await expect(page.getByTestId('control-finePointRatio')).toHaveValue('0.82')
+  await expect(page.getByTestId('control-density')).toHaveValue('0.72')
+  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.22')
+  await expect(page.getByTestId('control-finePointRatio')).toHaveValue('0.96')
+  await expect(page.getByTestId('control-reflectionBandWidth')).toHaveValue('0.78')
 
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeHidden()

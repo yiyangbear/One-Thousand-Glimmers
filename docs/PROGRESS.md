@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 1, Glitter Lab, and the interim visual-refactor milestone are complete. The project is paused for human acceptance; Phase 2 has not started.
+Phase 1, Glitter Lab, the point-shape refactor, and the sun-glitter spatial-organization milestone are complete. The project is paused for human acceptance; Phase 2 has not started.
 
 ## Completed
 
@@ -23,16 +23,22 @@ Phase 1, Glitter Lab, and the interim visual-refactor milestone are complete. Th
 - Restricted soft halo energy to the rare bright layer and changed the default glow to a restrained `0.32`.
 - Deepened the base water and added slow low-frequency depth, cross-scale mottling, micro variation, and subtly warped multi-directional waves.
 - Added fine-point ratio and water-depth contrast to Glitter Lab; saved default, recommended, and detail evidence screenshots.
+- Adopted the supplied parameter set as the new default without raising density beyond `0.72`.
+- Replaced the remaining full-screen fine-point floor with a tapered, off-center reflection band whose outskirts are almost empty.
+- Coupled glint eligibility to directional ripples, approximate slope/specular matching, and a deterministic broken patch field.
+- Added spatially smooth neighborhood pulses so adjacent glints share part of their timing while retaining individual phases.
+- Added live reflection-band width and local-correlation controls to Glitter Lab, bringing the implemented total to eleven.
+- Strengthened subtle gray-blue/cyan-gray directional water structure and saved three new visual-evidence screenshots.
 
 ## Current issues and risks
 
 - Naturalness, restraint, and long-viewing comfort require human visual acceptance even after automated smoke checks.
 - The production bundle is approximately 310 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F, does not fail the build, and can be revisited during Phase 4 performance work.
-- Glitter Lab uses a shader-local halo rather than a post-processing pass. Its refactored default is `0.32`; post-processing bloom remains a possible Phase 4 decision.
+- Glitter Lab uses a shader-local halo rather than a post-processing pass. Its current default is `0.22`; post-processing bloom remains a possible Phase 4 decision.
 - Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but sustained frame-time profiling across GPUs remains a later performance task.
 
 ## Next
 
-1. Receive human feedback on point shape, fine-layer density, glow hierarchy, and water depth.
+1. Receive human feedback on reflection-band placement, local patch rhythm, and whether the directional water texture remains sufficiently subtle.
 2. Keep Phase 2 paused until explicitly requested.
 3. If the panel is accepted and Phase 2 is later authorized, reuse its control architecture for sun parameters.

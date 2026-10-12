@@ -23,6 +23,8 @@ const CONTROLS: readonly ImplementedControl[] = [
   { key: 'bloomIntensity', label: '高亮辉光强度', min: 0, max: 1.5, step: 0.01 },
   { key: 'waveStrength', label: '水波起伏强度', min: 0, max: 2, step: 0.01 },
   { key: 'waterContrast', label: '水面深浅层次', min: 0.3, max: 2, step: 0.01 },
+  { key: 'reflectionBandWidth', label: '主反光区域宽度', min: 0.35, max: 1.6, step: 0.01 },
+  { key: 'localCorrelation', label: '局部相关闪烁', min: 0, max: 1, step: 0.01 },
 ]
 
 type GlitterLabProps = {
