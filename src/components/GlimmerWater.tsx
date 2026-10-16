@@ -141,12 +141,13 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
     const updatePreference = () => {
       reducedMotion.current = query.matches
+      gl.domElement.dataset.motionRate = query.matches ? '0.35' : '1'
     }
 
     updatePreference()
     query.addEventListener('change', updatePreference)
     return () => query.removeEventListener('change', updatePreference)
-  }, [])
+  }, [gl])
 
   useFrame(({ clock }, delta) => {
     const shader = material.current

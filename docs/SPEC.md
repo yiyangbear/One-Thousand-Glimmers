@@ -65,7 +65,7 @@
 
 - Pointer movement maps to normalized water coordinates and a bounded directional impulse; sparse browser events use distance as a fallback to velocity.
 - The disturbance uses an elliptical spatial falloff aligned to pointer direction and two low-amplitude wave components, never a radial ring function.
-- Input influence is capped at `1`, held for 180 ms, then decays exponentially. Pointer leave stops sampling but does not snap the current response to zero.
+- Input influence is capped at `1`, held for 260 ms, then decays exponentially over roughly 1–2 seconds. Pointer leave stops sampling but does not snap the current response to zero.
 - The default breeze-strength multiplier is `0.42`, adjustable from `0–1` in Glitter Lab.
 - The disturbance enters the existing height field, so water slopes and attached highlights respond together.
 
@@ -73,6 +73,14 @@
 
 - Phase 4: restrained glow, rhythm tuning, performance scaling, final visual polish.
 - Phase 5: expanded tests, cross-browser/responsive verification, accessibility/deployment readiness.
+
+## Phase 5 release requirements
+
+- Normal visits remain a full-screen artwork with no release UI or narrative overlay.
+- Glitter Lab remains keyboard-operable, viewport-contained, and internally scrollable on narrow portrait and short landscape screens.
+- Reduced-motion preference lowers autonomous time progression to `0.35×` while preserving quiet ongoing change.
+- Automated release checks include a 60-second Chromium soak plus lightweight Firefox/WebKit WebGL and responsive smoke tests when those runtimes are available.
+- GitHub Pages builds use the repository base path and deploy the generated `dist` artifact through GitHub Actions.
 
 ## Quality targets
 

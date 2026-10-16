@@ -118,5 +118,18 @@ Acceptance:
 
 ## Phase 5 — Release readiness
 
-- Expand logic/browser coverage, responsive/accessibility review, documentation, and deployment preparation.
-- Complete final human art acceptance and document remaining platform limits.
+Deliverables:
+
+- Add Chromium full regression plus lightweight Firefox/WebKit WebGL smoke coverage.
+- Verify narrow portrait and short landscape layouts, safe panel scrolling, and full-viewport canvas coverage.
+- Verify keyboard-operable Glitter Lab, visible focus, semantic labels, reduced-motion pacing, and renderer fallback semantics.
+- Run a 60-second browser soak for autonomous evolution, console/page errors, WebGL health, and quality telemetry.
+- Prepare a repository-relative Vite build, GitHub Pages Actions workflow, README, and durable Chinese deployment guide.
+
+Acceptance:
+
+- Typecheck, lint, unit tests, production build, responsive/accessibility checks, Chromium regression, and 60-second soak pass.
+- Firefox and WebKit checks pass when their Playwright runtimes are available; missing runtimes are recorded as a limitation rather than reported as passing.
+- The production artifact resolves assets beneath `/One-Thousand-Glimmers/` for project Pages deployment.
+- Release documents describe local use, known limitations, GitHub push, Pages setup, deployment verification, and rollback.
+- Phase 5 is recorded in its own commit. Final subjective art acceptance remains explicitly human-owned.

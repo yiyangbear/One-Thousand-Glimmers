@@ -71,6 +71,12 @@ body {
   display: none;
 }
 
+.glitter-lab summary:focus-visible {
+  border-radius: 0.55rem;
+  outline: 2px solid rgba(226, 237, 232, 0.72);
+  outline-offset: -3px;
+}
+
 .glitter-lab__summary-hint {
   color: rgba(221, 231, 227, 0.44);
   font-size: 0.64rem;
@@ -160,6 +166,28 @@ body {
 @media (max-height: 720px) {
   .glitter-lab__controls {
     gap: 0.5rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .glitter-lab {
+    top: max(0.65rem, env(safe-area-inset-top));
+    right: max(0.65rem, env(safe-area-inset-right));
+    left: max(0.65rem, env(safe-area-inset-left));
+    width: auto;
+  }
+
+  .glitter-lab__body {
+    max-height: calc(100dvh - 4.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glitter-lab *,
+  .glitter-lab *::before,
+  .glitter-lab *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 
 }

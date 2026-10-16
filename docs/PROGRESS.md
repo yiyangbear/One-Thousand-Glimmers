@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 4 is complete with automated checks passed. The project is paused for human visual/performance acceptance; Phase 5 has not started.
+Phase 5 release preparation is complete with all available automated checks passed. The repository is ready to push to GitHub; actual remote creation and public deployment remain user-controlled.
 
 ## Completed
 
@@ -43,7 +43,7 @@ Phase 4 is complete with automated checks passed. The project is paused for huma
 - Added Playwright assertions for azimuth centroid movement, elevation footprint change, and intensity-driven bright-pixel response.
 - Saved default, left/right azimuth, high-sun, and detail evidence screenshots.
 - Completed Phase 3 with bounded pointer position, motion direction, and influence state feeding the existing water-height shader.
-- Added a directionally stretched local ripple with spatial falloff, a 180 ms sparse-event hold, and exponential idle decay; no radial-wave history or particle trail is stored.
+- Added a directionally stretched local ripple with spatial falloff, a 260 ms sparse-event hold, and exponential idle decay; no radial-wave history or particle trail is stored.
 - Replaced the pending pointer-breeze label with a live `0–1` Glitter Lab control, defaulting to `0.42` and bringing the panel to fifteen implemented sliders.
 - Added Playwright coverage for rapid movement, influence cap, final-frame pixel response, idle recovery, console health, and WebGL state.
 - Repaired the first browser candidate after automation revealed that velocity-only impulses were too weak under sparse pointer events; bounded distance fallback now preserves subtle real interaction without relaxing the test.
@@ -58,18 +58,24 @@ Phase 4 is complete with automated checks passed. The project is paused for huma
 - Added a deterministic adaptive-quality controller with a `1–1.75` DPR range, two sustained slow windows before reduction, and five sustained fast windows before recovery.
 - Exposed current DPR, quality tier, and sampled FPS as canvas data attributes for browser QA; added three controller unit tests and Playwright telemetry checks.
 - Saved Phase 4 default, later, and glow-detail screenshots and verified continued autonomous evolution.
+- Completed Phase 5 with Chromium full regression plus Firefox and WebKit WebGL/responsive smoke coverage.
+- Added verified 390×844 portrait and 844×390 landscape layouts, internal debug-panel scrolling, reachable actions, and Phase 5 evidence screenshots.
+- Added keyboard focus styling and tests, semantic-label checks, and browser-visible `0.35×` reduced-motion pacing.
+- Passed a 60-second autonomous Chromium soak with clean console/page errors, WebGL state, and adaptive-quality telemetry.
+- Added repository-relative Vite builds, a GitHub Pages Actions workflow, a project README, and a durable Chinese deployment/rollback guide.
+- Verified the production HTML, JS, and CSS respond under `/One-Thousand-Glimmers/` in a local production preview.
 
 ## Current issues and risks
 
 - Naturalness, restraint, and long-viewing comfort require human visual acceptance even after automated smoke checks.
-- The production bundle is approximately 310 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F, does not fail the build, and can be revisited during Phase 4 performance work.
+- The production bundle is approximately 315 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F and does not fail the build.
 - Glitter Lab uses a shader-local halo rather than a post-processing pass. Its current default is `0.66`; halo energy remains restricted to rare bright glints, while post-processing bloom remains a possible Phase 4 decision.
-- Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but sustained frame-time profiling across GPUs remains a later performance task.
+- Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but thermal and frame-time behavior still varies by hardware.
 - Pointer breeze remains imperceptible on the user's device. Per explicit direction it is retained as an experimental, non-blocking control and deferred; Phase 4 did not increase its strength.
 - Adaptive DPR responds to sustained pressure, but frame-rate and quality transitions still require observation across integrated/discrete GPUs and high-DPI displays.
 
 ## Next
 
-1. Receive human feedback on the refined rare highlight/glow hierarchy and live sharpness under adaptive DPR.
-2. Keep Phase 5 paused until explicitly requested.
-3. When Phase 5 is authorized, complete cross-browser/responsive/accessibility, long-run, documentation, and deployment-readiness checks.
+1. Create the GitHub repository and push `main` when the user is ready to publish.
+2. Enable GitHub Pages with GitHub Actions and verify the resulting public URL.
+3. Complete final human art acceptance on the deployed desktop and mobile views; record any hardware-specific findings.

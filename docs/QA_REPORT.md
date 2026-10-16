@@ -367,3 +367,55 @@ Validation limitations:
 
 - Chromium at 1440×900 is the only automated browser/GPU path. High-DPI DPR transitions, integrated/discrete GPU behavior, thermal throttling, and long-duration stability remain partially deferred to Phase 5.
 - Pointer perceptibility is intentionally deferred by user direction and is not claimed as visually accepted.
+
+## Phase 5 — Release readiness
+
+Status: all available automated checks passed on 2026-10-16. Repository preparation is complete; GitHub remote creation, push, Pages enablement, and final public-URL verification have not yet been performed.
+
+Implemented work:
+
+- Added serial Chromium full regression and focused Firefox/WebKit WebGL plus responsive smoke projects. Browser runtimes were installed locally and actually executed.
+- Added portrait (`390×844`) and short landscape (`844×390`) coverage, safe viewport containment, internal Glitter Lab scrolling, and assertions that reset/copy actions remain reachable.
+- Added a visible keyboard-focus outline for the Glitter Lab summary, keyboard collapse/expand checks, semantic language/landmark/label assertions, and canvas telemetry confirming `prefers-reduced-motion` uses a `0.35×` time rate.
+- Added a 60-second autonomous soak that checks console errors, page exceptions, WebGL state, adaptive-quality telemetry, and a final screenshot.
+- Added configurable Vite `base`, GitHub Pages workflow, `npm run preview`, README, and `docs/DEPLOYMENT.md` with first-push, Pages setup, verification, troubleshooting, and non-destructive rollback instructions.
+
+Executed checks:
+
+- Architecture inspection — passed. Release behavior adds no runtime UI to ordinary visits; test/deployment configuration remains outside the shader model.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 4 files / 10 tests.
+- `VITE_BASE_PATH=/One-Thousand-Glimmers/ npm run build` — passed. Output JS is 1,130.83 kB / 314.71 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Production artifact path inspection — passed. Generated HTML references JS and CSS beneath `/One-Thousand-Glimmers/assets/`.
+- Workflow syntax inspection — passed; Ruby YAML parsing accepted `.github/workflows/deploy-pages.yml`.
+- First cross-browser run — failed before page creation because global Chromium clipboard permissions are unknown to Firefox/WebKit. Permissions were scoped to the Chromium project; no browser result was claimed from that run.
+- Focused cross-browser rerun — passed, 6/6 checks across Chromium, Firefox, and WebKit.
+- First full release run — 9/11 passed. The Chromium device preset overrode the expected viewport to 1280×720, and four simultaneous GPU-heavy workers reduced the already-deferred pointer pixel sample. Chromium viewport was explicitly restored to 1440×900 and GPU browser tests were made serial; neither visual assertion was weakened.
+- Final full `npm run test:e2e` — passed, 11/11 tests in 3.5 minutes using Chromium, Firefox, and WebKit.
+- Final affected-test rerun after button-reachability and focus-outline assertions — passed, 7/7 tests in 24.6 seconds across all three browsers.
+- 60-second soak — passed in Chromium. No console errors, page exceptions, or WebGL errors were collected; quality telemetry remained valid and the final frame was nonblank.
+- Local production preview — passed. HTML, generated JS, and generated CSS each returned HTTP 200 under the exact `/One-Thousand-Glimmers/` Pages path.
+- ImageMagick inspection — portrait, landscape, and soak screenshots are nonblank. The soak frame is 1440×900 with 2,061 colors, mean `0.2798`, and maximum `0.949`; no clipped white field was found.
+
+Evidence:
+
+- `artifacts/screenshots/phase-5-mobile-debug.png`
+- `artifacts/screenshots/phase-5-landscape-debug.png`
+- `artifacts/screenshots/phase-5-soak-60s.png`
+- Normal preview: `http://127.0.0.1:5173/`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Accessibility and responsive review:
+
+- Normal visits expose a single Chinese-labelled artwork landmark and no debug UI.
+- Glitter Lab is keyboard-collapsible, all fifteen sliders have visible text labels, and focused disclosure UI has a high-contrast outline.
+- Portrait and landscape canvases fill the viewport. The debug panel remains horizontally contained and scrolls internally without losing its action buttons.
+- Reduced motion slows rather than freezes the autonomous artwork, preserving the project's core passive-viewing behavior.
+
+Validation limitations:
+
+- The soak covers 60 seconds, not multi-hour thermal behavior.
+- Browser automation runs on macOS Playwright builds, not physical iOS/Android devices or every GPU/driver combination.
+- The workflow is locally syntax- and artifact-verified but cannot be considered deployed until a GitHub remote exists and the GitHub-hosted Actions run succeeds.
+- Final naturalness, emotional fit, mobile touch experience, and multi-minute viewing comfort remain human acceptance items.
