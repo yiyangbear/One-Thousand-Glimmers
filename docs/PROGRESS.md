@@ -69,6 +69,8 @@ Phase 5 release preparation and the original ambient-music integration are compl
 - Added Playwright coverage for default silence, loop configuration, fade completion, pause-position preservation, resume, load-failure isolation, cross-browser control visibility, and continued WebGL health.
 - Prepared the 128-second, 24-bit/44.1 kHz stereo Logic Pro WAV as a 125-second, 256 kbps MP3 using a 3-second equal-power loop crossfade. The source master remains untouched.
 - Verified the real 4.0 MB MP3 downloads and decodes in Chromium/Web Audio as 44.1 kHz stereo, and completed a 14-test cross-browser regression.
+- Repaired silent playback in the in-app browser by replacing its stalled `HTMLAudioElement` path with a user-gesture-created Web Audio engine. `AudioContext`, decoded-buffer looping, `GainNode` fades, pause-offset resume, cancellation, and teardown remain independent of the WebGL loop.
+- Verified the repair live in the in-app browser: the context advances to `running`, decodes the 125-second stereo buffer, suspends after fade-out, and resumes from the recorded offset.
 
 ## Current issues and risks
 

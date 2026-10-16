@@ -39,10 +39,6 @@ body {
   bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-.ambient-audio audio {
-  display: none;
-}
-
 .ambient-audio__toggle {
   display: grid;
   width: 2.65rem;
@@ -94,6 +90,7 @@ body {
 }
 
 .ambient-audio__toggle[data-state='off'] .ambient-audio__wave,
+.ambient-audio__toggle[data-state='loading'] .ambient-audio__wave,
 .ambient-audio__toggle[data-state='fading-out'] .ambient-audio__wave,
 .ambient-audio__toggle[data-state='error'] .ambient-audio__wave {
   opacity: 0;
@@ -104,9 +101,14 @@ body {
 }
 
 .ambient-audio__toggle[data-state='off'] .ambient-audio__muted-mark,
+.ambient-audio__toggle[data-state='loading'] .ambient-audio__muted-mark,
 .ambient-audio__toggle[data-state='fading-out'] .ambient-audio__muted-mark,
 .ambient-audio__toggle[data-state='error'] .ambient-audio__muted-mark {
   opacity: 0.78;
+}
+
+.ambient-audio__toggle[data-state='loading'] .ambient-audio__muted-mark {
+  opacity: 0.38;
 }
 
 .ambient-audio__toggle[data-state='error'] {

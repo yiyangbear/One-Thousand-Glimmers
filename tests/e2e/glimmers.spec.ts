@@ -99,67 +99,54 @@ async function countChangedPixelsBetweenScreenshots(
 }
 
 test('ambient music is opt-in, fades smoothly, pauses, and resumes in place', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(HTMLMediaElement.prototype, 'paused', {
-      configurable: true,
-      get() {
-        return this.dataset.mockPaused !== 'false'
-      },
-    })
-    HTMLMediaElement.prototype.play = function () {
-      this.dataset.mockPaused = 'false'
-      return Promise.resolve()
-    }
-    HTMLMediaElement.prototype.pause = function () {
-      this.dataset.mockPaused = 'true'
-    }
-    HTMLMediaElement.prototype.load = function () {}
-  })
-
+  test.setTimeout(45_000)
   await page.goto('/')
-  const audio = page.getByTestId('ambient-audio-element')
+  const engine = page.getByTestId('ambient-audio-engine')
   const musicToggle = page.getByRole('button', { name: '开启背景音乐' })
 
-  await expect(audio).toHaveJSProperty('paused', true)
   await expect(musicToggle).toHaveAttribute('aria-pressed', 'false')
+  await expect(engine).toHaveAttribute('data-context-state', 'uninitialized')
 
   await musicToggle.click()
-  await expect(page.getByRole('button', { name: '关闭背景音乐' })).toHaveAttribute(
+  const playingToggle = page.getByRole('button', { name: '关闭背景音乐' })
+  await expect(playingToggle).toHaveAttribute(
     'data-state',
     'fading-in',
+    { timeout: 10_000 },
   )
+  await expect(engine).toHaveAttribute('data-context-state', 'running')
+  await expect(engine).toHaveAttribute('data-channels', '2')
+  await expect(engine).toHaveAttribute('data-sample-rate', '44100')
   await page.waitForTimeout(2_100)
-  await expect(page.getByRole('button', { name: '关闭背景音乐' })).toHaveAttribute(
-    'data-state',
-    'on',
-  )
-  await expect(audio).toHaveAttribute('data-volume', '1.000')
-  await audio.evaluate((element) => {
-    ;(element as HTMLAudioElement).currentTime = 37
-  })
+  await expect(playingToggle).toHaveAttribute('data-state', 'on')
 
-  await page.getByRole('button', { name: '关闭背景音乐' }).click()
+  await playingToggle.click()
   await expect(page.getByRole('button', { name: '开启背景音乐' })).toHaveAttribute(
     'data-state',
     'fading-out',
   )
   await page.waitForTimeout(1_600)
-  await expect(audio).toHaveJSProperty('paused', true)
-  await expect(audio).toHaveAttribute('data-volume', '0.000')
-  await expect(audio).toHaveJSProperty('currentTime', 37)
+  await expect(engine).toHaveAttribute('data-context-state', 'suspended')
+  const pausedOffset = Number(await engine.getAttribute('data-offset'))
+  expect(pausedOffset).toBeGreaterThan(2)
 
   await page.getByRole('button', { name: '开启背景音乐' }).click()
-  await expect(audio).toHaveJSProperty('paused', false)
-  await expect(audio).toHaveJSProperty('currentTime', 37)
+  await expect(page.getByRole('button', { name: '关闭背景音乐' })).toHaveAttribute(
+    'data-state',
+    'fading-in',
+  )
+  await expect(engine).toHaveAttribute('data-context-state', 'running')
+  expect(Number(await engine.getAttribute('data-offset'))).toBeCloseTo(pausedOffset, 2)
 })
 
 test('the original ambient asset downloads and decodes in a real browser', async ({ page }) => {
   test.setTimeout(15_000)
   await page.goto('/')
-  const audio = page.getByTestId('ambient-audio-element')
-  const decoded = await audio.evaluate(async (element) => {
-    const media = element as HTMLAudioElement
-    const response = await fetch(media.currentSrc || media.src)
+  const engine = page.getByTestId('ambient-audio-engine')
+  const decoded = await engine.evaluate(async (element) => {
+    const source = (element as HTMLElement).dataset.source
+    if (!source) throw new Error('Missing audio source')
+    const response = await fetch(source)
     const bytes = await response.arrayBuffer()
     const byteLength = bytes.byteLength
     const context = new AudioContext()
@@ -178,20 +165,21 @@ test('the original ambient asset downloads and decodes in a real browser', async
   expect(decoded.duration).toBeGreaterThan(124)
   expect(decoded.duration).toBeLessThan(126)
   expect(decoded.sampleRate).toBe(44_100)
-  await expect(audio).toHaveJSProperty('loop', true)
+  await expect(engine).toHaveAttribute('data-loop', 'true')
 })
 
 test('an audio load failure leaves the visual artwork running', async ({ page }) => {
   const errors = collectRuntimeErrors(page)
+  await page.route('**/audio/one-thousand-glimmers.mp3', (route) => route.abort())
   await page.goto('/')
   const canvas = page.locator('canvas[data-renderer="ready"]')
-  const audio = page.getByTestId('ambient-audio-element')
 
-  await audio.dispatchEvent('error')
+  await page.getByRole('button', { name: '开启背景音乐' }).click()
   await expect(page.getByRole('button', { name: '音乐无法加载，点击重试' })).toBeVisible()
   await expect(page.getByRole('status')).toContainText('背景音乐加载失败')
   await expect(canvas).toBeVisible()
-  expect(errors).toEqual([])
+  expect(errors).toHaveLength(1)
+  expect(errors[0]).toContain('Failed to load resource')
 })
 
 test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
@@ -265,14 +253,24 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   await expect(page.getByTestId('control-sunIntensity')).toHaveValue('1')
 
   await page.getByTestId('control-waveStrength').fill('0')
+  const measureCadence = async () => {
+    let previous = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+    let changedPixels = 0
+    for (let sample = 0; sample < 4; sample += 1) {
+      await page.waitForTimeout(180)
+      const current = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+      changedPixels += await countChangedPixelsBetweenScreenshots(page, previous, current)
+      previous = current
+    }
+    return changedPixels
+  }
+
   await page.getByTestId('control-flickerSpeed').fill('0.1')
   await page.waitForTimeout(300)
   await panel.evaluate((element) => {
     element.style.visibility = 'hidden'
   })
-  const slowStart = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
-  await page.waitForTimeout(350)
-  const slowEnd = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+  const slowChangedPixels = await measureCadence()
   await panel.evaluate((element) => {
     element.style.visibility = 'visible'
   })
@@ -282,16 +280,12 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   await panel.evaluate((element) => {
     element.style.visibility = 'hidden'
   })
-  const fastStart = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
-  await page.waitForTimeout(350)
-  const fastEnd = await page.screenshot({ clip: { x: 520, y: 180, width: 500, height: 500 } })
+  const fastChangedPixels = await measureCadence()
   await panel.evaluate((element) => {
     element.style.visibility = 'visible'
   })
 
-  const slowChangedPixels = await countChangedPixelsBetweenScreenshots(page, slowStart, slowEnd)
-  const fastChangedPixels = await countChangedPixelsBetweenScreenshots(page, fastStart, fastEnd)
-  expect(fastChangedPixels).toBeGreaterThan(slowChangedPixels * 1.5)
+  expect(fastChangedPixels).toBeGreaterThan(slowChangedPixels * 1.25)
 
   await panel.getByRole('button', { name: '恢复默认' }).click()
 

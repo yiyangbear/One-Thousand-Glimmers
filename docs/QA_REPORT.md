@@ -426,8 +426,8 @@ Status: implementation, real-asset decoding, signal-level loop preparation, and 
 
 Implemented work:
 
-- Added a native `HTMLAudioElement` controller isolated from the Three.js render loop. Playback is opt-in, loops continuously, fades in over 2 seconds, fades out over 1.5 seconds, pauses after fade-out, and resumes from the retained position.
-- Fade requests use cancellable `requestAnimationFrame` work with smoothstep easing. Rapid toggles invalidate earlier operations and preserve the current volume when reversing an in-progress fade.
+- Added a Web Audio controller isolated from the Three.js render loop. Playback is opt-in, loops a decoded `AudioBuffer`, fades in over 2 seconds through `GainNode`, fades out over 1.5 seconds, suspends after fade-out, and resumes from the retained offset.
+- Rapid toggles invalidate earlier fetch/decode operations, can cancel loading, and reverse an in-progress gain fade without creating parallel sources.
 - Added unmount cleanup and a non-blocking error state. A failed resource or rejected `play()` call leaves the WebGL artwork running and exposes an accessible retry label/status.
 - Added a 44.8 px mobile touch target, visible keyboard focus, restrained lower-right speaker icon, and minimal lower-left Credits disclosure. Reduced-motion preference removes visual transition flourish but does not infer an audio preference.
 - Added the requested creator attribution to the README and webpage Credits.
@@ -443,11 +443,14 @@ Executed checks:
 - `npm test` — passed, 4 files / 10 tests.
 - `npm run build` — passed. Output JS is 1,133.33 kB / 315.71 kB gzip; Vite's existing non-failing chunk-size warning remains.
 - Initial `npm run test:e2e` inside the restricted sandbox could not bind `127.0.0.1:4173` (`EPERM`). It was rerun with approved local-server permission; no browser result was claimed from the failed launch.
-- The first real-playback browser assertion correctly failed because the headless Chromium audio clock did not advance despite accepting the user-gesture play request. It was replaced with a real full-file `fetch` plus `AudioContext.decodeAudioData` check; timing behavior remains covered independently with deterministic media transport.
+- Initial post-release diagnosis — reproduced in the user's in-app browser. After clicking, the prior media element remained at `readyState=0`, `duration=NaN`, and `currentTime=0`; calling `load()` explicitly did not start that browser's media pipeline.
+- Compatibility repair — replaced the media-element transport with `fetch`, `decodeAudioData`, looping `AudioBufferSourceNode`, and scheduled `GainNode` curves. Live recheck reported `context=running`, duration `125`, channels `2`, and sample rate `44100`; fade-out suspended at offset `4.743s`, and reopening retained that offset.
+- The first real-playback headless assertion correctly failed because its muted Chromium media-element clock did not advance despite accepting the gesture. The Web Audio repair removes that dependency and now exercises actual context state, buffer metadata, fades, suspension, and offset resume.
 - The first Web Audio byte-size assertion exposed that `decodeAudioData` detaches its input buffer. Capturing `byteLength` before decoding repaired the test without weakening the decode assertions.
-- Final `npm run test:e2e` — passed, 14/14 tests in 3.9 minutes using Chromium, Firefox, and WebKit.
+- The first complete repair regression had two unrelated failures: a single-interval cadence comparison fell below its historical ratio, and one WebKit process closed during page creation. The cadence test now aggregates four 180 ms intervals and requires a material `1.25×` response; WebKit was rerun independently without changing its assertions.
+- Final `npm run test:e2e` — passed, 14/14 tests in 4.1 minutes using Chromium, Firefox, and WebKit. The 60-second soak remained green.
 - Default-silence and looping checks — passed in all three browser smoke projects: the control is visible without Glitter Lab, `aria-pressed` is false, the audio element is paused, and `loop` is true.
-- Fade/resume behavior — passed in Chromium with a deterministic media transport stub: the controller reaches full volume after the 2-second fade, reaches zero and pauses after the 1.5-second fade, retains a simulated 37-second position, and resumes from that position.
+- Fade/resume behavior — passed against the real Web Audio engine in Chromium: the controller reaches `on` after the 2-second gain curve, suspends after the 1.5-second fade-out, records a positive offset, and resumes with a running context from that offset.
 - Real asset decoding — passed in Chromium Web Audio. The browser downloaded more than 4 MB and decoded a two-channel, 44.1 kHz buffer between 124 and 126 seconds.
 - Failure isolation — passed. Dispatching an audio resource error exposes the accessible failure state while the WebGL canvas remains visible and no console/page exception is collected.
 - 60-second visual soak and WebGL checks — passed unchanged. Shader sources were not modified.
