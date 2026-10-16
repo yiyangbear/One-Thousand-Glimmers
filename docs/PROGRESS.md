@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 5 release preparation is complete with all available automated checks passed. The repository is ready to push to GitHub; actual remote creation and public deployment remain user-controlled.
+Phase 5 release preparation and the original ambient-music integration are complete with all available automated checks passed. The real music asset is included; final audible balance and loop naturalness remain pending human acceptance.
 
 ## Completed
 
@@ -64,6 +64,11 @@ Phase 5 release preparation is complete with all available automated checks pass
 - Passed a 60-second autonomous Chromium soak with clean console/page errors, WebGL state, and adaptive-quality telemetry.
 - Added repository-relative Vite builds, a GitHub Pages Actions workflow, a project README, and a durable Chinese deployment/rollback guide.
 - Verified the production HTML, JS, and CSS respond under `/One-Thousand-Glimmers/` in a local production preview.
+- Added an independent native-audio controller with explicit opt-in playback, a 2-second fade-in, 1.5-second fade-out, loop mode, pause-position resume, rapid-toggle cancellation, unmount cleanup, and non-blocking error handling.
+- Added a restrained lower-right sound toggle that remains available with Glitter Lab hidden, plus a minimal Credits disclosure and creator-music attribution in the README.
+- Added Playwright coverage for default silence, loop configuration, fade completion, pause-position preservation, resume, load-failure isolation, cross-browser control visibility, and continued WebGL health.
+- Prepared the 128-second, 24-bit/44.1 kHz stereo Logic Pro WAV as a 125-second, 256 kbps MP3 using a 3-second equal-power loop crossfade. The source master remains untouched.
+- Verified the real 4.0 MB MP3 downloads and decodes in Chromium/Web Audio as 44.1 kHz stereo, and completed a 14-test cross-browser regression.
 
 ## Current issues and risks
 
@@ -73,9 +78,10 @@ Phase 5 release preparation is complete with all available automated checks pass
 - Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but thermal and frame-time behavior still varies by hardware.
 - Pointer breeze remains imperceptible on the user's device. Per explicit direction it is retained as an experimental, non-blocking control and deferred; Phase 4 did not increase its strength.
 - Adaptive DPR responds to sustained pressure, but frame-rate and quality transitions still require observation across integrated/discrete GPUs and high-DPI displays.
+- The source WAV's last second was about 15.5 dB RMS louder than its first second, making a direct loop risky. The prepared crossfade reduces the web asset's boundary mismatch to roughly 2 dB, but the final transition and music/art balance still require listening on the user's speakers/headphones.
 
 ## Next
 
-1. Create the GitHub repository and push `main` when the user is ready to publish.
-2. Enable GitHub Pages with GitHub Actions and verify the resulting public URL.
-3. Complete final human art acceptance on the deployed desktop and mobile views; record any hardware-specific findings.
+1. Manually accept the fade level, loop transition, desktop/mobile interaction, and artwork/music balance in the local preview.
+2. Push the accepted music integration to GitHub and verify the deployed Pages audio asset.
+3. Confirm the public Pages URL on desktop and mobile.

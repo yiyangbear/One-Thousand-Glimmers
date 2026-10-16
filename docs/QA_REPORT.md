@@ -419,3 +419,41 @@ Validation limitations:
 - Browser automation runs on macOS Playwright builds, not physical iOS/Android devices or every GPU/driver combination.
 - The workflow is locally syntax- and artifact-verified but cannot be considered deployed until a GitHub remote exists and the GitHub-hosted Actions run succeeds.
 - Final naturalness, emotional fit, mobile touch experience, and multi-minute viewing comfort remain human acceptance items.
+
+## Original ambient-music integration
+
+Status: implementation, real-asset decoding, signal-level loop preparation, and automated browser checks passed on 2026-10-16; audible artistic acceptance remains human-owned.
+
+Implemented work:
+
+- Added a native `HTMLAudioElement` controller isolated from the Three.js render loop. Playback is opt-in, loops continuously, fades in over 2 seconds, fades out over 1.5 seconds, pauses after fade-out, and resumes from the retained position.
+- Fade requests use cancellable `requestAnimationFrame` work with smoothstep easing. Rapid toggles invalidate earlier operations and preserve the current volume when reversing an in-progress fade.
+- Added unmount cleanup and a non-blocking error state. A failed resource or rejected `play()` call leaves the WebGL artwork running and exposes an accessible retry label/status.
+- Added a 44.8 px mobile touch target, visible keyboard focus, restrained lower-right speaker icon, and minimal lower-left Credits disclosure. Reduced-motion preference removes visual transition flourish but does not infer an audio preference.
+- Added the requested creator attribution to the README and webpage Credits.
+- Inspected the supplied Logic Pro WAV: PCM 24-bit, 44.1 kHz, stereo, 128 seconds, approximately `-31.3 dB` mean and `-15.0 dB` peak.
+- The source's opening second measured approximately `-48.6 dB RMS` while the final second measured approximately `-33.1 dB RMS`. To avoid a conspicuous direct-loop drop, exported a 125-second web version with a 3-second quarter-sine equal-power crossfade. The original WAV was not modified.
+- Encoded `public/audio/one-thousand-glimmers.mp3` at 256 kbps, 44.1 kHz stereo. The result is 4,002,771 bytes; first/last one-second RMS differs by roughly 2 dB rather than the source's roughly 15.5 dB.
+
+Executed checks:
+
+- Audio-source and boundary inspection — passed. Codec, sample rate, channels, duration, full-track level, first/last levels, and absence of a long digital-silence tail were checked with `ffprobe`/`ffmpeg`.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 4 files / 10 tests.
+- `npm run build` — passed. Output JS is 1,133.33 kB / 315.71 kB gzip; Vite's existing non-failing chunk-size warning remains.
+- Initial `npm run test:e2e` inside the restricted sandbox could not bind `127.0.0.1:4173` (`EPERM`). It was rerun with approved local-server permission; no browser result was claimed from the failed launch.
+- The first real-playback browser assertion correctly failed because the headless Chromium audio clock did not advance despite accepting the user-gesture play request. It was replaced with a real full-file `fetch` plus `AudioContext.decodeAudioData` check; timing behavior remains covered independently with deterministic media transport.
+- The first Web Audio byte-size assertion exposed that `decodeAudioData` detaches its input buffer. Capturing `byteLength` before decoding repaired the test without weakening the decode assertions.
+- Final `npm run test:e2e` — passed, 14/14 tests in 3.9 minutes using Chromium, Firefox, and WebKit.
+- Default-silence and looping checks — passed in all three browser smoke projects: the control is visible without Glitter Lab, `aria-pressed` is false, the audio element is paused, and `loop` is true.
+- Fade/resume behavior — passed in Chromium with a deterministic media transport stub: the controller reaches full volume after the 2-second fade, reaches zero and pauses after the 1.5-second fade, retains a simulated 37-second position, and resumes from that position.
+- Real asset decoding — passed in Chromium Web Audio. The browser downloaded more than 4 MB and decoded a two-channel, 44.1 kHz buffer between 124 and 126 seconds.
+- Failure isolation — passed. Dispatching an audio resource error exposes the accessible failure state while the WebGL canvas remains visible and no console/page exception is collected.
+- 60-second visual soak and WebGL checks — passed unchanged. Shader sources were not modified.
+- Screenshot inspection — passed. The lower-right control and lower-left collapsed Credits label remain restrained, do not cover the reflection band, and remain inside desktop/mobile safe areas. `artifacts/screenshots/phase-5-soak-60s.png` records the normal desktop state.
+
+Validation limitations:
+
+- Automated analysis verifies a materially smoother loop boundary and successful browser decoding, but cannot judge whether the transition is perceptually invisible on the user's listening system.
+- Audible fade balance, the emotional relationship between music and animation, physical mobile playback, and long-listening comfort require human acceptance.

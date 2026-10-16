@@ -7,6 +7,13 @@
 - Resize and device-pixel-ratio changes preserve full-screen coverage.
 - The first milestone contains no complex UI, sound, architecture, window frame, or narrative text.
 
+## Original ambient music
+
+- The artwork is silent on load. A minimal lower-right control starts the creator's original ambient score only after an explicit user gesture.
+- Playback loops, fades in over approximately 2 seconds, fades out over approximately 1.5 seconds, and resumes from the paused position.
+- Audio ownership is independent of the WebGL render loop. Load or playback failure must not interrupt the visual artwork.
+- A restrained Credits disclosure identifies the music as composed and produced by the creator of One Thousand Glimmers.
+
 ## Rendering model
 
 - A continuous multi-scale height field represents water.

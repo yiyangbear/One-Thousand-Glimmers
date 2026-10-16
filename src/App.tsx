@@ -1,4 +1,6 @@
 import { Component, useState, type ErrorInfo, type ReactNode } from 'react'
+import { AmbientAudio } from './components/AmbientAudio'
+import { Credits } from './components/Credits'
 import { GlitterLab } from './components/GlitterLab'
 import { GlimmerWater } from './components/GlimmerWater'
 import { createDefaultGlitterSettings } from './lib/glitterLab'
@@ -37,6 +39,8 @@ export function App() {
     <WebGLErrorBoundary>
       <main className="artwork" aria-label="阳光在深蓝灰色江面上安静地明灭">
         <GlimmerWater settings={settings} />
+        <Credits />
+        <AmbientAudio />
         {showGlitterLab && <GlitterLab settings={settings} onChange={setSettings} />}
       </main>
     </WebGLErrorBoundary>

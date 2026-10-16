@@ -2,6 +2,10 @@
 
 一个关于夏日江面日光闪烁的全屏生成艺术作品。画面使用 React、Three.js 与 GLSL 构建，保持自主运行；开发参数面板只在 URL 包含 `?debug=true` 时出现。
 
+**Original Music & Sound Design by the Creator**
+
+原创环境音乐文件应位于 `public/audio/one-thousand-glimmers.mp3`。页面默认静音，右下角的声音开关会在用户主动点击后播放音乐。
+
 ## 本地运行
 
 ```bash

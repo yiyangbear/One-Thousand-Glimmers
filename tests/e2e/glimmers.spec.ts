@@ -98,6 +98,102 @@ async function countChangedPixelsBetweenScreenshots(
   )
 }
 
+test('ambient music is opt-in, fades smoothly, pauses, and resumes in place', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(HTMLMediaElement.prototype, 'paused', {
+      configurable: true,
+      get() {
+        return this.dataset.mockPaused !== 'false'
+      },
+    })
+    HTMLMediaElement.prototype.play = function () {
+      this.dataset.mockPaused = 'false'
+      return Promise.resolve()
+    }
+    HTMLMediaElement.prototype.pause = function () {
+      this.dataset.mockPaused = 'true'
+    }
+    HTMLMediaElement.prototype.load = function () {}
+  })
+
+  await page.goto('/')
+  const audio = page.getByTestId('ambient-audio-element')
+  const musicToggle = page.getByRole('button', { name: '开启背景音乐' })
+
+  await expect(audio).toHaveJSProperty('paused', true)
+  await expect(musicToggle).toHaveAttribute('aria-pressed', 'false')
+
+  await musicToggle.click()
+  await expect(page.getByRole('button', { name: '关闭背景音乐' })).toHaveAttribute(
+    'data-state',
+    'fading-in',
+  )
+  await page.waitForTimeout(2_100)
+  await expect(page.getByRole('button', { name: '关闭背景音乐' })).toHaveAttribute(
+    'data-state',
+    'on',
+  )
+  await expect(audio).toHaveAttribute('data-volume', '1.000')
+  await audio.evaluate((element) => {
+    ;(element as HTMLAudioElement).currentTime = 37
+  })
+
+  await page.getByRole('button', { name: '关闭背景音乐' }).click()
+  await expect(page.getByRole('button', { name: '开启背景音乐' })).toHaveAttribute(
+    'data-state',
+    'fading-out',
+  )
+  await page.waitForTimeout(1_600)
+  await expect(audio).toHaveJSProperty('paused', true)
+  await expect(audio).toHaveAttribute('data-volume', '0.000')
+  await expect(audio).toHaveJSProperty('currentTime', 37)
+
+  await page.getByRole('button', { name: '开启背景音乐' }).click()
+  await expect(audio).toHaveJSProperty('paused', false)
+  await expect(audio).toHaveJSProperty('currentTime', 37)
+})
+
+test('the original ambient asset downloads and decodes in a real browser', async ({ page }) => {
+  test.setTimeout(15_000)
+  await page.goto('/')
+  const audio = page.getByTestId('ambient-audio-element')
+  const decoded = await audio.evaluate(async (element) => {
+    const media = element as HTMLAudioElement
+    const response = await fetch(media.currentSrc || media.src)
+    const bytes = await response.arrayBuffer()
+    const byteLength = bytes.byteLength
+    const context = new AudioContext()
+    const buffer = await context.decodeAudioData(bytes)
+    await context.close()
+    return {
+      byteLength,
+      channels: buffer.numberOfChannels,
+      duration: buffer.duration,
+      sampleRate: buffer.sampleRate,
+    }
+  })
+
+  expect(decoded.byteLength).toBeGreaterThan(4_000_000)
+  expect(decoded.channels).toBe(2)
+  expect(decoded.duration).toBeGreaterThan(124)
+  expect(decoded.duration).toBeLessThan(126)
+  expect(decoded.sampleRate).toBe(44_100)
+  await expect(audio).toHaveJSProperty('loop', true)
+})
+
+test('an audio load failure leaves the visual artwork running', async ({ page }) => {
+  const errors = collectRuntimeErrors(page)
+  await page.goto('/')
+  const canvas = page.locator('canvas[data-renderer="ready"]')
+  const audio = page.getByTestId('ambient-audio-element')
+
+  await audio.dispatchEvent('error')
+  await expect(page.getByRole('button', { name: '音乐无法加载，点击重试' })).toBeVisible()
+  await expect(page.getByRole('status')).toContainText('背景音乐加载失败')
+  await expect(canvas).toBeVisible()
+  expect(errors).toEqual([])
+})
+
 test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
   const errors = collectRuntimeErrors(page)
 

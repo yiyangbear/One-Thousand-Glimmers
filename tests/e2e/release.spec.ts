@@ -16,6 +16,12 @@ test('@cross-browser renders a healthy WebGL artwork', async ({ page }) => {
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(canvas).toBeVisible()
   await expect(page.getByLabel('Glitter Lab 开发面板')).toHaveCount(0)
+  const musicToggle = page.getByRole('button', { name: '开启背景音乐' })
+  const audio = page.getByTestId('ambient-audio-element')
+  await expect(musicToggle).toBeVisible()
+  await expect(musicToggle).toHaveAttribute('aria-pressed', 'false')
+  await expect(audio).toHaveJSProperty('paused', true)
+  await expect(audio).toHaveJSProperty('loop', true)
   await page.waitForTimeout(1_800)
 
   const state = await canvas.evaluate((element) => {
