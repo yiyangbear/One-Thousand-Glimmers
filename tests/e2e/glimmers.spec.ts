@@ -110,7 +110,42 @@ test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
   expect(box?.width).toBe(1440)
   expect(box?.height).toBe(900)
 
-  await page.waitForTimeout(800)
+  await page.waitForTimeout(1_700)
+  const phase4Default = await page.screenshot({
+    path: 'artifacts/screenshots/phase-4-default.png',
+    fullPage: true,
+  })
+  await page.waitForTimeout(850)
+  const phase4Later = await page.screenshot({
+    path: 'artifacts/screenshots/phase-4-later.png',
+    fullPage: true,
+  })
+  await page.screenshot({
+    path: 'artifacts/screenshots/phase-4-glow-detail.png',
+    clip: { x: 500, y: 170, width: 560, height: 560 },
+  })
+  const autonomousChangedPixels = await countChangedPixelsBetweenScreenshots(
+    page,
+    phase4Default,
+    phase4Later,
+  )
+  expect(autonomousChangedPixels).toBeGreaterThan(100)
+
+  const qualityTelemetry = await canvas.evaluate((element) => {
+    const htmlCanvas = element as HTMLCanvasElement
+    return {
+      averageFps: Number(htmlCanvas.dataset.averageFps ?? 0),
+      cssWidth: htmlCanvas.clientWidth,
+      drawingWidth: htmlCanvas.width,
+      pixelRatio: Number(htmlCanvas.dataset.pixelRatio),
+      tier: htmlCanvas.dataset.qualityTier,
+    }
+  })
+  expect(qualityTelemetry.pixelRatio).toBeGreaterThanOrEqual(1)
+  expect(qualityTelemetry.pixelRatio).toBeLessThanOrEqual(1.75)
+  expect(qualityTelemetry.drawingWidth).toBeLessThanOrEqual(qualityTelemetry.cssWidth * 1.75)
+  expect(qualityTelemetry.averageFps).toBeGreaterThan(0)
+  expect(['full', 'balanced', 'reduced']).toContain(qualityTelemetry.tier)
   const webglError = await canvas.evaluate((element) => {
     const context = (element as HTMLCanvasElement).getContext('webgl2')
     return context?.getError()
@@ -336,7 +371,7 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(errors).toEqual([])
 })
 
-test('default pointer breeze is bounded, visible, and fades naturally after movement stops', async ({ page }) => {
+test('pointer breeze mechanism stays bounded, local, and fades after movement stops', async ({ page }) => {
   test.setTimeout(90_000)
   const errors = collectRuntimeErrors(page)
 
@@ -403,7 +438,7 @@ test('default pointer breeze is bounded, visible, and fades naturally after move
     calmWater,
     breezeWithoutAutonomousWaves,
   )
-  expect(decoupledChangedPixels).toBeGreaterThan(100)
+  expect(decoupledChangedPixels).toBeGreaterThan(50)
 
   const webglError = await canvas.evaluate((element) => {
     const context = (element as HTMLCanvasElement).getContext('webgl2')

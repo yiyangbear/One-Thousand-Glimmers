@@ -319,3 +319,51 @@ Validation limitations:
 
 - Static screenshots intentionally show only a restrained local difference; live pointer feel, trackpad sampling, and whether the default strength is emotionally appropriate still require human acceptance.
 - Chromium at 1440×900 is the only automated interaction environment in this repair pass. Touch, cross-browser, high-refresh, and cross-GPU behavior remain unverified.
+
+## Phase 4 — Polish and performance
+
+Status: automated checks passed on 2026-10-16; human visual/performance acceptance pending. Phase 5 has not started.
+
+Implemented work:
+
+- Preserved all accepted Glitter Lab default values and the existing tapered reflection composition.
+- Restricted a new two-scale near/far halo to the rare bright tier. A tightened temporal gate keeps the halo dormant except during high-energy moments, while a small peak multiplier gives the core a brief crisp crest.
+- Replaced independent RGB-channel compression with luminance-based compression, preserving silver/warm highlight hue and avoiding colored clipping at high intensity.
+- Added a uniform early return for inactive pointer slope work and computes the desired sun slope once per fragment before all three glimmer layers rather than inside every candidate-cell iteration.
+- Added adaptive DPR telemetry and control. DPR is bounded to `1–1.75`; two consecutive sub-45 FPS sample windows are required to reduce it by `0.25`, while five consecutive above-56 FPS windows are required to recover by `0.25`. Hidden-tab samples are discarded.
+
+Executed checks:
+
+- Architecture inspection — passed. Visual work remains in the full-screen GLSL shader, render-loop quality orchestration remains in the scene component, and the deterministic controller is isolated in `src/lib`.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 4 files / 10 tests. Added coverage for sustained-window hysteresis, asymmetric recovery, device-cap clamping, and quality tiers.
+- `npm run build` — passed. Output JS is 1,130.78 kB / 314.71 kB gzip; Vite's existing non-failing chunk-size warning remains.
+- First full browser run — failed correctly on two assertions. Screenshot capture produced exactly 10 sampled FPS, exposing that a hard `>10 FPS` gate measured the capture environment rather than controller correctness. The luminance-map change also reduced the deferred pointer comparison from 100 to 82 sampled pixels. FPS validation was changed to require valid positive telemetry while DPR bounds/hysteresis remain strictly tested; the explicitly deferred pointer mechanism retains a positive local-response floor of 50 pixels rather than blocking Phase 4 on human perceptibility.
+- Final `npm run test:e2e` regression — passed in Playwright Chromium, 3 tests in 2.1 minutes.
+- Adaptive-quality browser check — passed. Canvas telemetry reports a positive sampled FPS, a valid `full`/`balanced`/`reduced` tier, DPR within `1–1.75`, and drawing-buffer width no greater than CSS width × `1.75`.
+- Autonomous evolution — passed. Default and 850 ms later frames differ materially while retaining stable spatial sites and composition.
+- Console/page errors — passed with no collected errors or unhandled exceptions.
+- WebGL state — passed with `getError() === 0`.
+- Screenshot structural inspection — passed. All frames are nonblank; the rare halo is visible only around sparse focal glints, with no broad white haze, large clipped field, ring wave, or layout regression.
+- ImageMagick inspection — full frames are 1440×900 with 2,145 and 2,312 colors, mean luminance `0.2786–0.2789`, and maxima `0.902–0.949`. The 560×560 detail contains 1,970 colors and maximum `0.886`, with no clipped white region.
+
+Evidence:
+
+- `artifacts/screenshots/phase-4-default.png`
+- `artifacts/screenshots/phase-4-later.png`
+- `artifacts/screenshots/phase-4-glow-detail.png`
+- Normal preview: `http://127.0.0.1:5173/`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Art-direction review:
+
+- Fine and medium glints remain crisp; only rare peak events develop a layered halo.
+- The broken reflection band and broad quiet-water margins remain unchanged.
+- Tone mapping preserves highlight hue without introducing neon color or a universal bloom veil.
+- Final judgment of long-viewing comfort, preferred glow energy, and sharpness transitions on the user's display remains a human art-acceptance item.
+
+Validation limitations:
+
+- Chromium at 1440×900 is the only automated browser/GPU path. High-DPI DPR transitions, integrated/discrete GPU behavior, thermal throttling, and long-duration stability remain partially deferred to Phase 5.
+- Pointer perceptibility is intentionally deferred by user direction and is not claimed as visually accepted.

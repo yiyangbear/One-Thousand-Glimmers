@@ -101,8 +101,20 @@ Acceptance:
 
 ## Phase 4 — Polish and performance
 
-- Tune highlight distribution, temporal envelopes, subtle glow, color, and tone mapping.
-- Add adaptive resolution/performance checks without weakening the visual model.
+Deliverables:
+
+- Refine only the rare bright layer into a crisp peak plus restrained near/far glow; keep fine and medium points free of universal bloom.
+- Preserve highlight hue with luminance-based tone mapping rather than independent channel compression.
+- Remove avoidable idle-pointer and repeated sun-slope shader work without changing the procedural model.
+- Add a bounded, hysteresis-based adaptive DPR controller that reacts to sustained frame pressure rather than single slow frames.
+
+Acceptance:
+
+- Default composition, accepted parameter values, tapered reflection band, and quiet-water negative space remain intact.
+- Glow remains confined to rare bright events with no broad white haze or enlarged copy around most points.
+- DPR stays within `1–1.75`, requires sustained slow/fast sample windows to change, and exposes browser-readable QA telemetry.
+- Typecheck, lint, unit tests, production build, browser console/WebGL checks, screenshots, and structural visual inspection pass.
+- Phase 4 is recorded in its own commit, then development pauses for human acceptance.
 
 ## Phase 5 — Release readiness
 

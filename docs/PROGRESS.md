@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 3 perceptibility repair is complete with automated checks passed. The project is paused for renewed human interaction acceptance; Phase 4 has not started.
+Phase 4 is complete with automated checks passed. The project is paused for human visual/performance acceptance; Phase 5 has not started.
 
 ## Completed
 
@@ -51,6 +51,13 @@ Phase 3 perceptibility repair is complete with automated checks passed. The proj
 - Split autonomous-water and pointer-breeze slope calculations so `waveStrength` no longer attenuates the independently controlled breeze a second time.
 - Expanded the directional disturbance footprint without adding rings or a retained trail, increased the event hold from 180 ms to 260 ms, and tuned exponential decay to fall below `0.03` in roughly two seconds.
 - Added a pure, tested pointer-envelope helper and changed Playwright coverage to verify visible response using the accepted default `0.42` wave and breeze values rather than temporary maximum values.
+- Completed Phase 4 without changing the accepted Glitter Lab defaults, reflection-band geometry, or three-level point population.
+- Refined the rare bright layer into a sharper peak plus restrained near/far halo; fine and medium points still receive no halo energy.
+- Replaced per-channel highlight compression with luminance-preserving tone mapping so rare silver/warm highlights retain their hue as they brighten.
+- Added an idle-pointer shader fast path and moved the desired sun slope out of repeated glimmer-cell work.
+- Added a deterministic adaptive-quality controller with a `1–1.75` DPR range, two sustained slow windows before reduction, and five sustained fast windows before recovery.
+- Exposed current DPR, quality tier, and sampled FPS as canvas data attributes for browser QA; added three controller unit tests and Playwright telemetry checks.
+- Saved Phase 4 default, later, and glow-detail screenshots and verified continued autonomous evolution.
 
 ## Current issues and risks
 
@@ -58,10 +65,11 @@ Phase 3 perceptibility repair is complete with automated checks passed. The proj
 - The production bundle is approximately 310 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F, does not fail the build, and can be revisited during Phase 4 performance work.
 - Glitter Lab uses a shader-local halo rather than a post-processing pass. Its current default is `0.66`; halo energy remains restricted to rare bright glints, while post-processing bloom remains a possible Phase 4 decision.
 - Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but sustained frame-time profiling across GPUs remains a later performance task.
-- The repaired default breeze now has automated final-frame evidence, but perceived strength and the exact 1–2 second feel remain pending live human acceptance on the user's pointing device.
+- Pointer breeze remains imperceptible on the user's device. Per explicit direction it is retained as an experimental, non-blocking control and deferred; Phase 4 did not increase its strength.
+- Adaptive DPR responds to sustained pressure, but frame-rate and quality transitions still require observation across integrated/discrete GPUs and high-DPI displays.
 
 ## Next
 
-1. Receive renewed human feedback on whether the repaired default `0.42` breeze is perceptible yet sufficiently restrained.
-2. Keep Phase 4 paused until explicitly requested.
-3. When Phase 4 is authorized, profile sustained fragment cost and complete final glow/rhythm/performance polish.
+1. Receive human feedback on the refined rare highlight/glow hierarchy and live sharpness under adaptive DPR.
+2. Keep Phase 5 paused until explicitly requested.
+3. When Phase 5 is authorized, complete cross-browser/responsive/accessibility, long-run, documentation, and deployment-readiness checks.

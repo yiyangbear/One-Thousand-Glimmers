@@ -112,6 +112,8 @@ vec2 autonomousWaterSlope(vec2 p, float time) {
 }
 
 vec2 pointerBreezeSlope(vec2 p, float time) {
+  if (uPointerInfluence < 0.001 || uBreezeStrength < 0.001) return vec2(0.0);
+
   const float epsilon = 0.0025;
   float left = pointerBreeze(p - vec2(epsilon, 0.0), time);
   float right = pointerBreeze(p + vec2(epsilon, 0.0), time);
@@ -200,6 +202,7 @@ float temporalEnvelope(vec2 id, vec2 uv, float tier, float time) {
 float glimmerLayer(
   vec2 uv,
   vec2 slope,
+  vec2 desiredSlope,
   float time,
   float activity,
   float tier,
@@ -254,19 +257,22 @@ float glimmerLayer(
       float present = step(1.0 - density, hash21(id + 127.1));
       float flicker = temporalEnvelope(id, uv, tier, time);
 
-      vec2 desiredSlope = sunDesiredSlope();
       float normalMatch = exp(-dot(slope - desiredSlope, slope - desiredSlope) * 185.0);
       float slopeResponse = mix(0.45, 1.0, normalMatch);
       if (tier > 0.5) slopeResponse = mix(0.32, 1.16, normalMatch);
       if (tier > 1.5) slopeResponse = mix(0.18, 1.42, normalMatch);
       float luminance = core * present * flicker * slopeResponse;
       luminance *= mix(0.78, 1.55, rare * step(1.5, tier));
+      if (tier > 1.5) luminance *= mix(1.0, 1.18, smoothstep(0.86, 1.0, flicker));
 
       total += luminance;
       if (tier > 1.5) {
-        float softHalo = exp(-shapedDistance * shapedDistance * 0.34);
-        softHalo *= smoothstep(0.48, 0.94, flicker) * present * mix(0.2, 0.82, normalMatch);
-        haloTotal += max(softHalo - core * 0.38, 0.0) * mix(0.55, 1.2, rare);
+        float nearHalo = exp(-shapedDistance * shapedDistance * 0.52);
+        float farHalo = exp(-shapedDistance * shapedDistance * 0.15);
+        float haloEvent = pow(smoothstep(0.64, 0.97, flicker), 1.35);
+        float layeredHalo = nearHalo * 0.7 + farHalo * 0.12;
+        layeredHalo *= haloEvent * present * mix(0.12, 0.78, normalMatch);
+        haloTotal += max(layeredHalo - core * 0.3, 0.0) * mix(0.5, 1.12, rare);
       }
       warmTotal += luminance * smoothstep(0.91, 0.998, hash21(id + 241.9));
     }
@@ -325,9 +331,9 @@ void main() {
   float mediumWarmth = 0.0;
   float brightHalo = 0.0;
   float brightWarmth = 0.0;
-  float fine = glimmerLayer(vUv, slope, uTime, activity, 0.0, fineHalo, fineWarmth);
-  float medium = glimmerLayer(vUv, slope, uTime, activity, 1.0, mediumHalo, mediumWarmth);
-  float bright = glimmerLayer(vUv, slope, uTime, activity, 2.0, brightHalo, brightWarmth);
+  float fine = glimmerLayer(vUv, slope, desiredSlope, uTime, activity, 0.0, fineHalo, fineWarmth);
+  float medium = glimmerLayer(vUv, slope, desiredSlope, uTime, activity, 1.0, mediumHalo, mediumWarmth);
+  float bright = glimmerLayer(vUv, slope, desiredSlope, uTime, activity, 2.0, brightHalo, brightWarmth);
 
   vec3 coolSilver = vec3(0.72, 0.8, 0.82);
   vec3 clearSilver = vec3(0.9, 0.93, 0.89);
@@ -342,7 +348,9 @@ void main() {
 
   float vignette = 1.0 - dot(vUv - 0.5, vUv - 0.5) * 0.22;
   color *= vignette;
-  color = color / (1.0 + color * 0.42);
+  float sceneLuminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
+  float mappedLuminance = sceneLuminance / (1.0 + sceneLuminance * 0.42);
+  color *= mappedLuminance / max(sceneLuminance, 0.0001);
   color = pow(max(color, 0.0), vec3(1.0 / 2.2));
 
   gl_FragColor = vec4(color, 1.0);

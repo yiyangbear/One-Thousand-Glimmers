@@ -3,18 +3,25 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import fragmentShader from '../shaders/glimmerWater.frag?raw'
 import vertexShader from '../shaders/fullscreen.vert?raw'
+import {
+  createAdaptiveQualityState,
+  MAX_PIXEL_RATIO,
+  QUALITY_SAMPLE_SECONDS,
+  qualityTier,
+  updateAdaptiveQuality,
+} from '../lib/adaptiveQuality'
 import { DEFAULT_GLITTER_SETTINGS, type GlitterSettings } from '../lib/glitterLab'
 import { decayPointerInfluence, POINTER_BREEZE_HOLD_MS } from '../lib/pointerBreeze'
 
-const MAX_PIXEL_RATIO = 1.75
-
-type BreezeCanvas = HTMLCanvasElement & { __pointerInfluence?: number }
+type ArtworkCanvas = HTMLCanvasElement & { __pointerInfluence?: number }
 
 function WaterSurface({ settings }: { settings: GlitterSettings }) {
   const material = useRef<THREE.ShaderMaterial>(null)
-  const { gl } = useThree()
+  const { gl, setDpr } = useThree()
   const drawingBufferSize = useMemo(() => new THREE.Vector2(), [])
   const reducedMotion = useRef(false)
+  const adaptiveQuality = useRef(createAdaptiveQualityState(1, MAX_PIXEL_RATIO))
+  const qualitySample = useRef({ elapsed: 0, frames: 0 })
   const breeze = useRef({
     position: new THREE.Vector2(0.5, 0.5),
     previousPosition: new THREE.Vector2(0.5, 0.5),
@@ -77,6 +84,11 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
 
   useEffect(() => {
     const canvas = gl.domElement
+    const maxPixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO)
+    adaptiveQuality.current = createAdaptiveQualityState(gl.getPixelRatio(), maxPixelRatio)
+    canvas.dataset.pixelRatio = adaptiveQuality.current.pixelRatio.toFixed(2)
+    canvas.dataset.qualityTier = qualityTier(adaptiveQuality.current.pixelRatio, maxPixelRatio)
+
     const state = breeze.current
 
     const handlePointerMove = (event: PointerEvent) => {
@@ -153,7 +165,34 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
     shader.uniforms.uPointerPosition.value.copy(state.position)
     shader.uniforms.uPointerVelocity.value.copy(state.velocity)
     shader.uniforms.uPointerInfluence.value = state.influence
-    ;(gl.domElement as BreezeCanvas).__pointerInfluence = state.influence
+    const canvas = gl.domElement as ArtworkCanvas
+    canvas.__pointerInfluence = state.influence
+
+    if (document.visibilityState === 'visible') {
+      qualitySample.current.elapsed += boundedDelta
+      qualitySample.current.frames += 1
+      if (qualitySample.current.elapsed >= QUALITY_SAMPLE_SECONDS) {
+        const averageFps = qualitySample.current.frames / qualitySample.current.elapsed
+        const maxPixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO)
+        const nextQuality = updateAdaptiveQuality(
+          adaptiveQuality.current,
+          averageFps,
+          maxPixelRatio,
+        )
+        if (nextQuality.pixelRatio !== adaptiveQuality.current.pixelRatio) {
+          setDpr(nextQuality.pixelRatio)
+        }
+        adaptiveQuality.current = nextQuality
+        canvas.dataset.averageFps = averageFps.toFixed(1)
+        canvas.dataset.pixelRatio = nextQuality.pixelRatio.toFixed(2)
+        canvas.dataset.qualityTier = qualityTier(nextQuality.pixelRatio, maxPixelRatio)
+        qualitySample.current.elapsed = 0
+        qualitySample.current.frames = 0
+      }
+    } else {
+      qualitySample.current.elapsed = 0
+      qualitySample.current.frames = 0
+    }
   })
 
   return (
