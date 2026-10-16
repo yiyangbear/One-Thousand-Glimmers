@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 3 is complete with automated checks passed. The project is paused for human acceptance; Phase 4 has not started.
+Phase 3 perceptibility repair is complete with automated checks passed. The project is paused for renewed human interaction acceptance; Phase 4 has not started.
 
 ## Completed
 
@@ -47,6 +47,10 @@ Phase 3 is complete with automated checks passed. The project is paused for huma
 - Replaced the pending pointer-breeze label with a live `0–1` Glitter Lab control, defaulting to `0.42` and bringing the panel to fifteen implemented sliders.
 - Added Playwright coverage for rapid movement, influence cap, final-frame pixel response, idle recovery, console health, and WebGL state.
 - Repaired the first browser candidate after automation revealed that velocity-only impulses were too weak under sparse pointer events; bounded distance fallback now preserves subtle real interaction without relaxing the test.
+- Reopened Phase 3 after human review found the default breeze effectively imperceptible despite the maximum-strength browser test passing.
+- Split autonomous-water and pointer-breeze slope calculations so `waveStrength` no longer attenuates the independently controlled breeze a second time.
+- Expanded the directional disturbance footprint without adding rings or a retained trail, increased the event hold from 180 ms to 260 ms, and tuned exponential decay to fall below `0.03` in roughly two seconds.
+- Added a pure, tested pointer-envelope helper and changed Playwright coverage to verify visible response using the accepted default `0.42` wave and breeze values rather than temporary maximum values.
 
 ## Current issues and risks
 
@@ -54,9 +58,10 @@ Phase 3 is complete with automated checks passed. The project is paused for huma
 - The production bundle is approximately 310 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F, does not fail the build, and can be revisited during Phase 4 performance work.
 - Glitter Lab uses a shader-local halo rather than a post-processing pass. Its current default is `0.66`; halo energy remains restricted to rare bright glints, while post-processing bloom remains a possible Phase 4 decision.
 - Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but sustained frame-time profiling across GPUs remains a later performance task.
+- The repaired default breeze now has automated final-frame evidence, but perceived strength and the exact 1–2 second feel remain pending live human acceptance on the user's pointing device.
 
 ## Next
 
-1. Receive human feedback on whether the default `0.42` breeze is perceptible yet sufficiently restrained.
+1. Receive renewed human feedback on whether the repaired default `0.42` breeze is perceptible yet sufficiently restrained.
 2. Keep Phase 4 paused until explicitly requested.
 3. When Phase 4 is authorized, profile sustained fragment cost and complete final glow/rhythm/performance polish.

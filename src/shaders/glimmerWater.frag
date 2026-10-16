@@ -82,15 +82,15 @@ float pointerBreeze(vec2 p, float time) {
 
   float alongDistance = dot(offset, direction);
   float acrossDistance = dot(offset, across);
-  float radius = mix(0.055, 0.115, uPointerInfluence);
-  vec2 local = vec2(alongDistance / (radius * 1.55), acrossDistance / (radius * 0.72));
-  float falloff = exp(-dot(local, local) * 1.35);
+  float radius = mix(0.075, 0.15, uPointerInfluence);
+  vec2 local = vec2(alongDistance / (radius * 1.7), acrossDistance / (radius * 0.82));
+  float falloff = exp(-dot(local, local) * 1.15);
   float phase = acrossDistance * 52.0 + alongDistance * 8.0 - time * 2.1;
   float directionalWave = sin(phase) * 0.72 + sin(phase * 1.67 + 1.3) * 0.28;
   return directionalWave * falloff * uPointerInfluence * uBreezeStrength * 0.045;
 }
 
-float waterHeight(vec2 p, float time) {
+float autonomousWaterHeight(vec2 p, float time) {
   vec2 warped = p + vec2(
     sin(p.y * 4.3 + time * 0.09),
     sin(p.x * 3.1 - time * 0.07)
@@ -99,16 +99,24 @@ float waterHeight(vec2 p, float time) {
   broad += sin(dot(warped, normalize(vec2(-0.63, 0.78))) * 14.0 - time * 0.21 + 1.7) * 0.28;
   float middle = sin(dot(warped, normalize(vec2(0.25, 0.97))) * 31.0 + time * 0.34 + sin(p.x * 3.0)) * 0.17;
   float fine = directionalRipple(warped, time) * 0.105;
-  fine += pointerBreeze(warped, time);
   return broad + middle + fine;
 }
 
-vec2 waterSlope(vec2 p, float time) {
+vec2 autonomousWaterSlope(vec2 p, float time) {
   const float epsilon = 0.0025;
-  float left = waterHeight(p - vec2(epsilon, 0.0), time);
-  float right = waterHeight(p + vec2(epsilon, 0.0), time);
-  float down = waterHeight(p - vec2(0.0, epsilon), time);
-  float up = waterHeight(p + vec2(0.0, epsilon), time);
+  float left = autonomousWaterHeight(p - vec2(epsilon, 0.0), time);
+  float right = autonomousWaterHeight(p + vec2(epsilon, 0.0), time);
+  float down = autonomousWaterHeight(p - vec2(0.0, epsilon), time);
+  float up = autonomousWaterHeight(p + vec2(0.0, epsilon), time);
+  return vec2(right - left, up - down) / (2.0 * epsilon) * 0.008;
+}
+
+vec2 pointerBreezeSlope(vec2 p, float time) {
+  const float epsilon = 0.0025;
+  float left = pointerBreeze(p - vec2(epsilon, 0.0), time);
+  float right = pointerBreeze(p + vec2(epsilon, 0.0), time);
+  float down = pointerBreeze(p - vec2(0.0, epsilon), time);
+  float up = pointerBreeze(p + vec2(0.0, epsilon), time);
   return vec2(right - left, up - down) / (2.0 * epsilon) * 0.008;
 }
 
@@ -272,19 +280,27 @@ float glimmerLayer(
 void main() {
   float aspect = uResolution.x / max(uResolution.y, 1.0);
   vec2 waterPosition = vec2((vUv.x - 0.5) * aspect, vUv.y - 0.5);
-  vec2 slope = waterSlope(waterPosition, uTime) * uWaveStrength;
+  vec2 autonomousSlope = autonomousWaterSlope(waterPosition, uTime) * uWaveStrength;
+  vec2 breezeSlope = pointerBreezeSlope(waterPosition, uTime);
+  vec2 slope = autonomousSlope + breezeSlope;
 
   float depthField = quietFbm(waterPosition * vec2(1.25, 0.92) + vec2(uTime * 0.006, -1.7));
   float crossField = quietFbm(waterPosition * vec2(3.4, 5.2) + vec2(-2.3, uTime * 0.009));
   float microField = valueNoise(waterPosition * vec2(19.0, 31.0) + vec2(uTime * 0.022, -uTime * 0.015));
   float rippleField = directionalRipple(waterPosition, uTime);
-  float slopeShade = clamp(0.5 + slope.y * 1.65 - slope.x * 0.58, 0.0, 1.0);
+  float autonomousSlopeShade = clamp(
+    0.5 + autonomousSlope.y * 1.65 - autonomousSlope.x * 0.58,
+    0.0,
+    1.0
+  );
+  float breezeSlopeShade = breezeSlope.y * 1.65 - breezeSlope.x * 0.58;
   float tone = 0.35;
   tone += (depthField - 0.5) * 0.58 * uWaterContrast;
   tone += (crossField - 0.5) * 0.16 * uWaterContrast;
   tone += (microField - 0.5) * 0.052 * uWaterContrast;
   tone += rippleField * 0.041 * uWaveStrength;
-  tone += (slopeShade - 0.5) * 0.11 * uWaveStrength;
+  tone += (autonomousSlopeShade - 0.5) * 0.11 * uWaveStrength;
+  tone += breezeSlopeShade * 0.24;
   vec3 deepWater = vec3(0.018, 0.052, 0.068);
   vec3 liftedWater = vec3(0.068, 0.132, 0.15);
   vec3 color = mix(deepWater, liftedWater, clamp(tone, 0.02, 0.9));

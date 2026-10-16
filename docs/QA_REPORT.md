@@ -277,3 +277,45 @@ Art-direction review:
 Validation limitations:
 
 - Automated interaction uses Chromium mouse events at 1440×900. Trackpad feel, touch input, high-refresh displays, and cross-GPU performance remain unverified.
+
+## Phase 3 — Default-perceptibility repair
+
+Status: automated checks passed on 2026-10-16; renewed human interaction acceptance pending. Phase 4 has not started.
+
+Reason for reopening:
+
+- Human review found no perceptible response at the accepted defaults. The original browser test used both `waveStrength=1` and `breezeStrength=1`, making its signal about 5.7 times stronger than the `0.42 × 0.42` default path before spatial falloff. Passing that test did not establish default usability.
+
+Implemented repair:
+
+- Separated the autonomous water slope and pointer-breeze slope in GLSL. `waveStrength` now scales only the autonomous field; `breezeStrength` independently scales the pointer field before both slopes feed normal matching and glint activity. Autonomous and breeze-driven base-water shading are also evaluated separately, removing the last color-path multiplication by `waveStrength`.
+- Expanded the soft directional footprint from radius `0.055–0.115` to `0.075–0.15`, with a slightly wider directional ellipse and gentler Gaussian-like falloff. The disturbance remains local and non-radial.
+- Extended sparse-event hold from 180 ms to 260 ms and set exponential decay rate to `2.05`. Unit coverage verifies approximately `0.129` influence after one second of decay and below `0.03` after two seconds.
+- Added `src/lib/pointerBreeze.ts` so envelope constants and decay behavior are deterministic and independently testable.
+
+Executed checks:
+
+- Architecture inspection — passed. The continuous single-shader water model remains intact; no particles, event history, trail buffer, or per-frame allocation was introduced.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 3 files / 7 tests. The two new tests cover the 1–2 second decay envelope, bounded influence, negative deltas, and long frame gaps.
+- `npm run build` — passed. Output JS is 1,129.00 kB / 314.10 kB gzip; Vite's existing non-failing chunk-size warning remains.
+- First `npm run test:e2e` launch inside the restricted sandbox could not bind `127.0.0.1:4173` (`EPERM`). It was rerun with approved local-server permission; no test result was claimed from the failed launch.
+- Full `npm run test:e2e` regression — passed in Playwright Chromium, 3 tests in 2.5 minutes.
+- Default-value pointer check — passed. The test explicitly retains `waveStrength=0.42` and `breezeStrength=0.42`, verifies bounded active influence, requires more than 100 sampled final-frame pixel changes, and confirms influence below `0.03` after 2.2 seconds.
+- Decoupling check repair — the first two expanded runs reached the 60- and 90-second limits because the new step attempted to fill a slider while the screenshot harness still had the panel hidden. After fixing that harness error, the assertion correctly failed with only 10 changed samples and revealed a remaining `waveStrength` multiplier in base-water slope shading. That color path was separated as well. The final local-region rerun verifies more than 100 sampled pixel changes with `waveStrength=0` and the default `breezeStrength=0.42`.
+- Console/page errors — passed with no collected errors or unhandled exceptions.
+- WebGL state — passed with `getError() === 0`.
+- Screenshot inspection — passed for structural regressions. Idle, active, and recovered frames are nonblank and preserve the quiet reflection band; no circular ring, splash peak, hard trail, or global brightness lift was observed.
+
+Evidence:
+
+- `artifacts/screenshots/phase-3-breeze-idle.png`
+- `artifacts/screenshots/phase-3-breeze-active.png`
+- `artifacts/screenshots/phase-3-breeze-recovered.png`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Validation limitations:
+
+- Static screenshots intentionally show only a restrained local difference; live pointer feel, trackpad sampling, and whether the default strength is emotionally appropriate still require human acceptance.
+- Chromium at 1440×900 is the only automated interaction environment in this repair pass. Touch, cross-browser, high-refresh, and cross-GPU behavior remain unverified.

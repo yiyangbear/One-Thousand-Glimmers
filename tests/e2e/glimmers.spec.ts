@@ -336,8 +336,8 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(errors).toEqual([])
 })
 
-test('pointer breeze is bounded, affects the water, and fades after movement stops', async ({ page }) => {
-  test.setTimeout(60_000)
+test('default pointer breeze is bounded, visible, and fades naturally after movement stops', async ({ page }) => {
+  test.setTimeout(90_000)
   const errors = collectRuntimeErrors(page)
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -348,8 +348,8 @@ test('pointer breeze is bounded, affects the water, and fades after movement sto
   await expect(page.getByTestId('control-breezeStrength')).toBeVisible()
 
   await page.getByTestId('control-flickerSpeed').fill('0.1')
-  await page.getByTestId('control-waveStrength').fill('1')
-  await page.getByTestId('control-breezeStrength').fill('1')
+  await expect(page.getByTestId('control-waveStrength')).toHaveValue('0.42')
+  await expect(page.getByTestId('control-breezeStrength')).toHaveValue('0.42')
   await panel.evaluate((element) => {
     element.style.visibility = 'hidden'
   })
@@ -378,12 +378,32 @@ test('pointer breeze is bounded, affects the water, and fades after movement sto
   )
   expect(activeChangedPixels).toBeGreaterThan(100)
 
-  await page.waitForTimeout(2_100)
+  await page.waitForTimeout(2_200)
   const recoveredInfluence = await canvas.evaluate(
     (element) => (element as HTMLCanvasElement & { __pointerInfluence?: number }).__pointerInfluence ?? 0,
   )
   await page.screenshot({ path: 'artifacts/screenshots/phase-3-breeze-recovered.png' })
   expect(recoveredInfluence).toBeLessThan(0.03)
+
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+  await page.getByTestId('control-waveStrength').fill('0')
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  await page.waitForTimeout(240)
+  const decoupledClip = { x: 600, y: 250, width: 520, height: 360 }
+  const calmWater = await page.screenshot({ clip: decoupledClip })
+  await page.mouse.move(920, 430)
+  await page.waitForTimeout(60)
+  const breezeWithoutAutonomousWaves = await page.screenshot({ clip: decoupledClip })
+  const decoupledChangedPixels = await countChangedPixelsBetweenScreenshots(
+    page,
+    calmWater,
+    breezeWithoutAutonomousWaves,
+  )
+  expect(decoupledChangedPixels).toBeGreaterThan(100)
 
   const webglError = await canvas.evaluate((element) => {
     const context = (element as HTMLCanvasElement).getContext('webgl2')

@@ -92,7 +92,8 @@ Deliverables:
 
 Acceptance:
 
-- Fast pointer motion produces a measurable local final-frame response while internal influence remains `≤1`.
+- Fast pointer motion produces a measurable local final-frame response at the accepted default `waveStrength` and `breezeStrength` values while internal influence remains `≤1`.
+- Pointer response is not multiplied by `waveStrength`; lowering autonomous wave strength must not silently disable the breeze.
 - Influence decays below `0.03` after the automated idle interval.
 - No circular rings, splash peaks, jelly deformation, hard trails, or global brightness shift appear in screenshots.
 - Typecheck, lint, unit tests, production build, browser console/WebGL checks, pixel response, and idle-recovery checks pass.

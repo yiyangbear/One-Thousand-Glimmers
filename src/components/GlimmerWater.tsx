@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import fragmentShader from '../shaders/glimmerWater.frag?raw'
 import vertexShader from '../shaders/fullscreen.vert?raw'
 import { DEFAULT_GLITTER_SETTINGS, type GlitterSettings } from '../lib/glitterLab'
+import { decayPointerInfluence, POINTER_BREEZE_HOLD_MS } from '../lib/pointerBreeze'
 
 const MAX_PIXEL_RATIO = 1.75
 
@@ -103,7 +104,7 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
           const distanceImpulse = THREE.MathUtils.smoothstep(distance, 0.002, 0.12) * 0.78
           const impulse = Math.max(speedImpulse, distanceImpulse)
           state.influence = Math.max(state.influence, impulse)
-          state.holdUntil = now + 180
+          state.holdUntil = now + POINTER_BREEZE_HOLD_MS
         }
       }
 
@@ -142,7 +143,7 @@ function WaterSurface({ settings }: { settings: GlitterSettings }) {
     const state = breeze.current
     const boundedDelta = Math.min(delta, 0.1)
     if (performance.now() > state.holdUntil) {
-      state.influence *= Math.exp(-boundedDelta * 2.35)
+      state.influence = decayPointerInfluence(state.influence, boundedDelta)
     }
     state.velocity.lerp(state.restVelocity, 1 - Math.exp(-boundedDelta * 0.45))
 
