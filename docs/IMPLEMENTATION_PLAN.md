@@ -35,9 +35,20 @@ Acceptance:
 
 ## Phase 2 — Sun model and controls
 
+Deliverables:
+
 - Introduce sun elevation, azimuth, and intensity uniforms.
-- Derive the reflection band and specular response from light/view orientation.
-- Add a restrained, hideable debug panel and automated parameter-state screenshots.
+- Derive reflection-band position, tilt, width, length, slope target, activity, warmth, and radiance from the sun controls.
+- Extend the existing `?debug=true` Glitter Lab with restrained sun controls while keeping normal visits free of UI.
+- Add automated pixel-level parameter-response checks and state screenshots.
+
+Acceptance:
+
+- Azimuth produces a clear horizontal reflection-band displacement rather than changing particle count alone.
+- Elevation changes the band footprint and target surface slope.
+- Intensity changes both visible-facet activity and highlight radiance.
+- Typecheck, lint, unit tests, production build, browser console/WebGL checks, and parameter-state screenshots pass.
+- Phase 2 is recorded in its own commit, then development pauses for human acceptance.
 
 ## Interim milestone — Glitter Lab
 
@@ -67,7 +78,7 @@ This user-requested revision follows the point-shape refactor and remains outsid
 - Replace the remaining full-screen fine-point floor with a soft, tapered reflection region and near-empty outskirts.
 - Derive broken patches and point eligibility from directional ripples, surface slope, and deterministic low-frequency fields.
 - Blend individual flicker with smooth neighborhood pulses so nearby sites become active together.
-- Add reflection-band width and local-correlation controls without increasing the global default density above `0.72`.
+- Add reflection-band width and local-correlation controls without relying on a global density increase as the spatial model.
 - Save default, recommended, and detail screenshots; rerun the full QA workflow and pause for art acceptance.
 
 ## Phase 3 — Pointer breeze

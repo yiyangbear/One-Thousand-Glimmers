@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 1, Glitter Lab, the point-shape refactor, and the sun-glitter spatial-organization milestone are complete. The project is paused for human acceptance; Phase 2 has not started.
+Phase 2 is complete with automated checks passed. The project is paused for human acceptance; Phase 3 has not started.
 
 ## Completed
 
@@ -36,6 +36,12 @@ Phase 1, Glitter Lab, the point-shape refactor, and the sun-glitter spatial-orga
 - Expanded the experimental speed ceiling from `6` to `10` and refined the shader envelope with a restrained high-frequency component plus a secondary harmonic in the regional pulse.
 - Narrowed the smooth transition windows so brightness gradients complete sooner while retaining continuous eased edges and multi-rate detail.
 - Revalidated dynamic cadence, reset/export behavior, screenshots, console health, and WebGL state in Playwright on 2026-10-16.
+- Adopted the latest supplied visual baseline: density `1.23`, size `1.65`, speed `7.5`, highlight gain `2.65`, bloom `0.66`, wave strength `0.42`, fine-point ratio `1.16`, water contrast `1.6`, band width `0.82`, and local correlation `0.7`.
+- Completed Phase 2 with live sun elevation, azimuth, and intensity controls, bringing Glitter Lab to fourteen implemented sliders.
+- Derived the band center, tilt, near/far extent, width, target surface slope, facet activity, highlight warmth, and radiance from the sun model.
+- Kept ordinary visits UI-free and made the taller debug panel viewport-scrollable.
+- Added Playwright assertions for azimuth centroid movement, elevation footprint change, and intensity-driven bright-pixel response.
+- Saved default, left/right azimuth, high-sun, and detail evidence screenshots.
 
 ## Current issues and risks
 
@@ -46,6 +52,6 @@ Phase 1, Glitter Lab, the point-shape refactor, and the sun-glitter spatial-orga
 
 ## Next
 
-1. Receive human feedback on reflection-band placement, local patch rhythm, and whether the directional water texture remains sufficiently subtle.
-2. Keep Phase 2 paused until explicitly requested.
-3. If the panel is accepted and Phase 2 is later authorized, reuse its control architecture for sun parameters.
+1. Receive human feedback on the default sun direction and the plausibility of low/high-elevation band shapes.
+2. Keep Phase 3 paused until explicitly requested.
+3. When Phase 3 is authorized, implement the bounded pointer-breeze disturbance in the existing continuous water field.

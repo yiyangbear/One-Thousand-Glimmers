@@ -33,6 +33,35 @@ async function countBrightPixelsInScreenshot(page: Page, png: Buffer): Promise<n
   }, png.toString('base64'))
 }
 
+async function measureBrightPixelsInScreenshot(
+  page: Page,
+  png: Buffer,
+): Promise<{ count: number; centroidX: number }> {
+  return page.evaluate(async (base64) => {
+    const image = new Image()
+    image.src = `data:image/png;base64,${base64}`
+    await image.decode()
+
+    const sample = document.createElement('canvas')
+    sample.width = image.naturalWidth
+    sample.height = image.naturalHeight
+    const context = sample.getContext('2d', { willReadFrequently: true })
+    if (!context) return { count: -1, centroidX: -1 }
+
+    context.drawImage(image, 0, 0)
+    const pixels = context.getImageData(0, 0, sample.width, sample.height).data
+    let count = 0
+    let xTotal = 0
+    for (let index = 0; index < pixels.length; index += 4) {
+      if (pixels[index] > 135 && pixels[index + 1] > 135 && pixels[index + 2] > 135) {
+        count += 1
+        xTotal += (index / 4) % sample.width
+      }
+    }
+    return { count, centroidX: count > 0 ? xTotal / count : -1 }
+  }, png.toString('base64'))
+}
+
 async function countChangedPixelsBetweenScreenshots(
   page: Page,
   firstPng: Buffer,
@@ -91,15 +120,18 @@ test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
 })
 
 test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async ({ page }) => {
-  test.setTimeout(90_000)
+  test.setTimeout(120_000)
   const errors = collectRuntimeErrors(page)
 
   await page.goto('/?debug=true')
   const panel = page.getByLabel('Glitter Lab 开发面板')
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(panel).toBeVisible()
-  await expect(panel.locator('input[type="range"]')).toHaveCount(11)
+  await expect(panel.locator('input[type="range"]')).toHaveCount(14)
   await expect(page.getByTestId('control-flickerSpeed')).toHaveAttribute('max', '10')
+  await expect(page.getByTestId('control-sunElevation')).toHaveValue('24')
+  await expect(page.getByTestId('control-sunAzimuth')).toHaveValue('28')
+  await expect(page.getByTestId('control-sunIntensity')).toHaveValue('1')
   await expect(panel.getByText('未实现 · Phase 3')).toBeVisible()
 
   await page.getByTestId('control-waveStrength').fill('0')
@@ -135,9 +167,85 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
 
   await page.waitForTimeout(900)
   await page.screenshot({
-    path: 'artifacts/screenshots/refined-cadence-default.png',
+    path: 'artifacts/screenshots/phase-2-default.png',
     fullPage: true,
   })
+
+  await page.getByTestId('control-flickerSpeed').fill('0.1')
+  await page.getByTestId('control-sunAzimuth').fill('-55')
+  await page.waitForTimeout(240)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const leftSunScreenshot = await page.screenshot({
+    path: 'artifacts/screenshots/phase-2-azimuth-left.png',
+  })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+
+  await page.getByTestId('control-sunAzimuth').fill('55')
+  await page.waitForTimeout(240)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const rightSunScreenshot = await page.screenshot({
+    path: 'artifacts/screenshots/phase-2-azimuth-right.png',
+  })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+
+  const leftSun = await measureBrightPixelsInScreenshot(page, leftSunScreenshot)
+  const rightSun = await measureBrightPixelsInScreenshot(page, rightSunScreenshot)
+  expect(rightSun.centroidX).toBeGreaterThan(leftSun.centroidX + 120)
+
+  await page.getByTestId('control-sunAzimuth').fill('28')
+  await page.getByTestId('control-sunElevation').fill('8')
+  await page.waitForTimeout(180)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const lowSun = await page.screenshot({ clip: { x: 300, y: 80, width: 700, height: 740 } })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+  await page.getByTestId('control-sunElevation').fill('70')
+  await page.waitForTimeout(180)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const highSun = await page.screenshot({ clip: { x: 300, y: 80, width: 700, height: 740 } })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+  const elevationChangedPixels = await countChangedPixelsBetweenScreenshots(page, lowSun, highSun)
+  expect(elevationChangedPixels).toBeGreaterThan(500)
+
+  await page.getByTestId('control-sunElevation').fill('24')
+  await page.getByTestId('control-sunIntensity').fill('0.2')
+  await page.waitForTimeout(180)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const dimSunScreenshot = await page.screenshot({ clip: { x: 300, y: 80, width: 700, height: 740 } })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+  await page.getByTestId('control-sunIntensity').fill('2')
+  await page.waitForTimeout(180)
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  const brightSunScreenshot = await page.screenshot({ clip: { x: 300, y: 80, width: 700, height: 740 } })
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+  const dimSun = await measureBrightPixelsInScreenshot(page, dimSunScreenshot)
+  const brightSun = await measureBrightPixelsInScreenshot(page, brightSunScreenshot)
+  expect(brightSun.count).toBeGreaterThan(dimSun.count + 50)
+
+  await panel.getByRole('button', { name: '恢复默认' }).click()
 
   await page.getByTestId('control-density').fill('2')
   await page.getByTestId('control-size').fill('2')
@@ -169,17 +277,20 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(boostedBrightPixels).toBeGreaterThan(mutedBrightPixels + 50)
 
   const exportedSettings = {
-    density: 0.87,
+    density: 1.23,
     size: 1.65,
-    flickerSpeed: 8.5,
-    highlightIntensity: 2.53,
+    flickerSpeed: 7.5,
+    highlightIntensity: 2.65,
     clustering: 0,
     bloomIntensity: 0.66,
-    waveStrength: 0.38,
-    finePointRatio: 0.96,
+    waveStrength: 0.42,
+    finePointRatio: 1.16,
     waterContrast: 1.6,
     reflectionBandWidth: 0.82,
     localCorrelation: 0.7,
+    sunElevation: 62,
+    sunAzimuth: -38,
+    sunIntensity: 1.25,
   }
 
   for (const [key, value] of Object.entries(exportedSettings)) {
@@ -187,11 +298,11 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   }
   await page.waitForTimeout(180)
   await page.screenshot({
-    path: 'artifacts/screenshots/refined-cadence-fast.png',
+    path: 'artifacts/screenshots/phase-2-high-sun.png',
     fullPage: true,
   })
   await page.screenshot({
-    path: 'artifacts/screenshots/refined-cadence-detail.png',
+    path: 'artifacts/screenshots/phase-2-high-sun-detail.png',
     clip: { x: 520, y: 150, width: 560, height: 560 },
   })
 
@@ -201,12 +312,15 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(clipboard).toEqual(exportedSettings)
 
   await panel.getByRole('button', { name: '恢复默认' }).click()
-  await expect(page.getByTestId('control-density')).toHaveValue('0.87')
+  await expect(page.getByTestId('control-density')).toHaveValue('1.23')
   await expect(page.getByTestId('control-size')).toHaveValue('1.65')
-  await expect(page.getByTestId('control-flickerSpeed')).toHaveValue('6')
+  await expect(page.getByTestId('control-flickerSpeed')).toHaveValue('7.5')
   await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.66')
-  await expect(page.getByTestId('control-finePointRatio')).toHaveValue('0.96')
+  await expect(page.getByTestId('control-finePointRatio')).toHaveValue('1.16')
   await expect(page.getByTestId('control-reflectionBandWidth')).toHaveValue('0.82')
+  await expect(page.getByTestId('control-sunElevation')).toHaveValue('24')
+  await expect(page.getByTestId('control-sunAzimuth')).toHaveValue('28')
+  await expect(page.getByTestId('control-sunIntensity')).toHaveValue('1')
 
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeHidden()

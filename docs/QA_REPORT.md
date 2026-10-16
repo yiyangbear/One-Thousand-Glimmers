@@ -201,3 +201,43 @@ Evidence:
 Validation limitations:
 
 - Static evidence cannot determine whether speed `6`, `8.5`, or another value offers the best long-viewing cadence. Final temporal refinement remains a human art judgment in the live preview.
+
+## Phase 2 — Sun model and controls
+
+Status: automated checks passed on 2026-10-16; human art acceptance pending. Phase 3 has not started.
+
+Executed checks:
+
+- Architecture inspection — passed. Three scalar sun parameters extend the existing typed settings, live-uniform path, single full-screen shader, and gated Glitter Lab; no particle objects or per-frame allocations were added.
+- Adopted the supplied eleven visual values as the reset/default baseline, then added art-directed sun defaults: elevation `24°`, azimuth `28°`, intensity `1`.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 2 files / 5 tests. Exact-default, independent-reset, and JSON serialization coverage includes all fourteen settings.
+- `npm run build` — passed. Output JS is 1,125.50 kB / 313.17 kB gzip; Vite's existing non-failing chunk-size warning remains.
+- `npm run test:e2e` — passed in Playwright Chromium, 2 tests in 1.5 minutes. Normal-mode panel absence, fourteen controls, copy/reset, collapse/expand, console/page errors, and WebGL `getError() === 0` were verified.
+- Azimuth response — passed. At otherwise controlled settings, changing azimuth from `-55°` to `+55°` moved the browser-measured bright-pixel centroid rightward by more than 120 pixels.
+- Elevation response — passed. Changing elevation from `8°` to `70°` changed more than 500 sampled pixels in a 700×740 crop, verifying a real footprint/slope response.
+- Intensity response — passed. Intensity `2` produced more than 50 additional bright pixels over intensity `0.2` in the same sampled crop.
+- Dynamic cadence and generic visual-control response — passed; the prior low/high speed comparison and boosted/muted highlight checks remain active.
+- Screenshot inspection — passed structural checks. The default retains a broken tapered band and broad quiet margin; opposite azimuths visibly move and tilt the field; the high-sun exploratory state broadens/shortens the footprint without blank output or hard-edged masks.
+- ImageMagick inspection — all evidence files are nonblank 1440×900 frames except the intentional 560×560 detail. Full-frame means remain within 0.2622–0.2805; no default frame is clipped to black or white.
+
+Evidence:
+
+- `artifacts/screenshots/phase-2-default.png`
+- `artifacts/screenshots/phase-2-azimuth-left.png`
+- `artifacts/screenshots/phase-2-azimuth-right.png`
+- `artifacts/screenshots/phase-2-high-sun.png`
+- `artifacts/screenshots/phase-2-high-sun-detail.png`
+- Normal preview: `http://127.0.0.1:5173/`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Art-direction review:
+
+- Solar controls reshape the reflection geometry and surface eligibility instead of simulating direction changes through a global particle-count adjustment.
+- Low elevation introduces only a restrained warm bias, while silver-white remains dominant.
+- Extreme debug values can intentionally produce dense/broad fields; final preferred sun settings and long-viewing comfort require human review.
+
+Validation limitations:
+
+- Browser automation covers Chromium at 1440×900. Cross-browser, mobile, and sustained GPU profiling remain Phase 4/5 work.

@@ -8,17 +8,20 @@ import {
 describe('Glitter Lab settings', () => {
   it('stores the art-directed multi-layer defaults', () => {
     expect(DEFAULT_GLITTER_SETTINGS).toEqual({
-      density: 0.87,
+      density: 1.23,
       size: 1.65,
-      flickerSpeed: 6,
-      highlightIntensity: 2.53,
+      flickerSpeed: 7.5,
+      highlightIntensity: 2.65,
       clustering: 0,
       bloomIntensity: 0.66,
-      waveStrength: 0.38,
-      finePointRatio: 0.96,
+      waveStrength: 0.42,
+      finePointRatio: 1.16,
       waterContrast: 1.6,
       reflectionBandWidth: 0.82,
       localCorrelation: 0.7,
+      sunElevation: 24,
+      sunAzimuth: 28,
+      sunIntensity: 1,
     })
   })
 

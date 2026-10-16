@@ -87,6 +87,8 @@ body {
 }
 
 .glitter-lab__body {
+  max-height: calc(100vh - 5rem);
+  overflow-y: auto;
   border-top: 1px solid rgba(223, 235, 230, 0.1);
   padding: 0.85rem 0.9rem 0.9rem;
 }
@@ -174,10 +176,6 @@ body {
     gap: 0.5rem;
   }
 
-  .glitter-lab__body {
-    max-height: calc(100vh - 5rem);
-    overflow-y: auto;
-  }
 }
 
 .render-fallback {

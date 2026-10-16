@@ -13,6 +13,9 @@ uniform float uFinePointRatio;
 uniform float uWaterContrast;
 uniform float uReflectionBandWidth;
 uniform float uLocalCorrelation;
+uniform float uSunElevation;
+uniform float uSunAzimuth;
+uniform float uSunIntensity;
 
 varying vec2 vUv;
 
@@ -86,10 +89,37 @@ vec2 waterSlope(vec2 p, float time) {
   return vec2(right - left, up - down) / (2.0 * epsilon) * 0.008;
 }
 
+float sunElevation01() {
+  return clamp((uSunElevation - 5.0) / 70.0, 0.0, 1.0);
+}
+
+vec2 sunDesiredSlope() {
+  float elevation = sunElevation01();
+  float azimuth = uSunAzimuth * PI / 180.0;
+  float slopeMagnitude = mix(0.13, 0.055, elevation);
+  return vec2(
+    -sin(azimuth) * slopeMagnitude - 0.045,
+    cos(azimuth) * 0.035 - 0.012
+  );
+}
+
 float reflectionEnvelope(vec2 uv) {
-  float vertical = smoothstep(0.01, 0.18, uv.y) * (1.0 - smoothstep(0.88, 1.03, uv.y));
-  float center = 0.56 + (uv.y - 0.5) * 0.085 + sin(uv.y * 8.0 + 0.6) * 0.012;
-  float width = mix(0.17, 0.045, smoothstep(0.04, 0.96, uv.y));
+  float elevation = sunElevation01();
+  float azimuth = uSunAzimuth * PI / 180.0;
+  float nearFadeStart = mix(0.01, 0.08, elevation);
+  float nearFadeEnd = mix(0.16, 0.31, elevation);
+  float farFadeStart = mix(0.9, 0.68, elevation);
+  float farFadeEnd = mix(1.03, 0.88, elevation);
+  float vertical = smoothstep(nearFadeStart, nearFadeEnd, uv.y);
+  vertical *= 1.0 - smoothstep(farFadeStart, farFadeEnd, uv.y);
+
+  float horizontalShift = sin(azimuth) * 0.12;
+  float directionalTilt = sin(azimuth) * 0.18;
+  float center = 0.5 + horizontalShift + (uv.y - 0.5) * directionalTilt;
+  center += sin(uv.y * 8.0 + 0.6 + azimuth) * 0.012;
+  float nearWidth = mix(0.15, 0.24, elevation);
+  float farWidth = mix(0.04, 0.075, elevation);
+  float width = mix(nearWidth, farWidth, smoothstep(0.04, 0.96, uv.y));
   width *= uReflectionBandWidth;
   float lateral = exp(-pow(abs(uv.x - center) / max(width, 0.001), 1.62));
   return vertical * lateral;
@@ -193,7 +223,7 @@ float glimmerLayer(
       float present = step(1.0 - density, hash21(id + 127.1));
       float flicker = temporalEnvelope(id, uv, tier, time);
 
-      vec2 desiredSlope = vec2(-0.105, 0.018);
+      vec2 desiredSlope = sunDesiredSlope();
       float normalMatch = exp(-dot(slope - desiredSlope, slope - desiredSlope) * 185.0);
       float slopeResponse = mix(0.45, 1.0, normalMatch);
       if (tier > 0.5) slopeResponse = mix(0.32, 1.16, normalMatch);
@@ -244,10 +274,12 @@ void main() {
   float patchMask = smoothstep(0.38, 0.76, patchNoise + rippleAffinity * 0.13);
   float brokenField = mix(0.54 + patchMask * 0.46, 0.12 + patchMask * 0.88, clamp(uClustering, 0.0, 1.0));
   brokenField *= mix(1.0, 0.55 + patchMask * patchMask * 0.75, max(uClustering - 1.0, 0.0));
-  vec2 desiredSlope = vec2(-0.105, 0.018);
+  vec2 desiredSlope = sunDesiredSlope();
   float normalMatch = exp(-dot(slope - desiredSlope, slope - desiredSlope) * 150.0);
   float surfaceAttachment = mix(0.28, 1.0, normalMatch) * mix(0.42, 1.0, rippleAffinity);
-  float activity = clamp(envelope * brokenField * surfaceAttachment, 0.0, 1.0);
+  float solarActivity = mix(0.78, 1.2, sqrt(clamp(uSunIntensity, 0.2, 2.0) * 0.5));
+  solarActivity *= mix(1.08, 0.88, sunElevation01());
+  float activity = clamp(envelope * brokenField * surfaceAttachment * solarActivity, 0.0, 1.0);
   float fineHalo = 0.0;
   float fineWarmth = 0.0;
   float mediumHalo = 0.0;
@@ -261,11 +293,13 @@ void main() {
   vec3 coolSilver = vec3(0.72, 0.8, 0.82);
   vec3 clearSilver = vec3(0.9, 0.93, 0.89);
   vec3 softGold = vec3(0.96, 0.84, 0.61);
-  vec3 brightColor = mix(clearSilver, softGold, clamp(brightWarmth * 0.42, 0.0, 0.24));
-  color += coolSilver * fine * 0.72 * uHighlightIntensity;
-  color += clearSilver * medium * 1.28 * uHighlightIntensity;
-  color += brightColor * bright * 2.25 * uHighlightIntensity;
-  color += brightColor * brightHalo * 0.34 * uBloomIntensity * uHighlightIntensity;
+  float lowSunWarmth = (1.0 - sunElevation01()) * 0.12;
+  vec3 brightColor = mix(clearSilver, softGold, clamp(brightWarmth * 0.42 + lowSunWarmth, 0.0, 0.3));
+  float solarGain = pow(clamp(uSunIntensity, 0.2, 2.0), 0.82);
+  color += coolSilver * fine * 0.72 * uHighlightIntensity * solarGain;
+  color += clearSilver * medium * 1.28 * uHighlightIntensity * solarGain;
+  color += brightColor * bright * 2.25 * uHighlightIntensity * solarGain;
+  color += brightColor * brightHalo * 0.34 * uBloomIntensity * uHighlightIntensity * solarGain;
 
   float vignette = 1.0 - dot(vUv - 0.5, vUv - 0.5) * 0.22;
   color *= vignette;
