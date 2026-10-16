@@ -13,6 +13,7 @@ export type GlitterSettings = {
   sunElevation: number
   sunAzimuth: number
   sunIntensity: number
+  breezeStrength: number
 }
 
 export const DEFAULT_GLITTER_SETTINGS: Readonly<GlitterSettings> = Object.freeze({
@@ -30,6 +31,7 @@ export const DEFAULT_GLITTER_SETTINGS: Readonly<GlitterSettings> = Object.freeze
   sunElevation: 24,
   sunAzimuth: 28,
   sunIntensity: 1,
+  breezeStrength: 0.42,
 })
 
 export function createDefaultGlitterSettings(): GlitterSettings {

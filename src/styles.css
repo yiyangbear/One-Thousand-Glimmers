@@ -111,8 +111,7 @@ body {
   gap: 0.38rem;
 }
 
-.glitter-lab__label-row,
-.glitter-lab__pending {
+.glitter-lab__label-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -132,19 +131,6 @@ body {
   margin: 0;
   accent-color: #c8d2c8;
   cursor: ew-resize;
-}
-
-.glitter-lab__pending {
-  padding-top: 0.05rem;
-  color: rgba(221, 231, 227, 0.42);
-}
-
-.glitter-lab__pending span:last-child {
-  border: 1px solid rgba(223, 235, 230, 0.12);
-  border-radius: 999px;
-  padding: 0.18rem 0.42rem;
-  font-size: 0.58rem;
-  white-space: nowrap;
 }
 
 .glitter-lab__actions {

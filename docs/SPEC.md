@@ -29,7 +29,7 @@
 ## Glitter Lab development milestone
 
 - Ordinary visits keep the artwork free of UI. `?debug=true` reveals a restrained, collapsible panel in the upper-right corner.
-- Implemented live parameters are density, size, flicker speed, sun elevation, sun azimuth, sun intensity, highlight-response gain, fine-point ratio, clustering, bright-layer halo intensity, wave strength, water-depth contrast, main reflection-band width, and local flicker correlation.
+- Implemented live parameters are density, size, flicker speed, sun elevation, sun azimuth, sun intensity, highlight-response gain, fine-point ratio, clustering, bright-layer halo intensity, wave strength, pointer-breeze strength, water-depth contrast, main reflection-band width, and local flicker correlation.
 - The current visual defaults use the latest supplied tuning (`density 1.23`, `size 1.65`, `flickerSpeed 7.5`, `highlightIntensity 2.65`, `clustering 0`, `bloomIntensity 0.66`, `waveStrength 0.42`, `finePointRatio 1.16`, `waterContrast 1.6`, reflection-band width `0.82`, and local correlation `0.7`). Phase 2 adds an art-directed default sun at elevation `24°`, azimuth `28°`, and intensity `1`.
 - Flicker speed ranges from `0.1` to `10`. Both point-level envelopes and smooth neighborhood pulses respond to it; values above the default `7.5` are an exploratory development range.
 - The temporal envelope combines broad, secondary, slow-drift, and low-amplitude high-frequency components. Faster settings must preserve continuous easing and unsynchronized local detail rather than becoming binary opacity toggles.
@@ -61,9 +61,16 @@
 - Intensity changes both the activity threshold of candidate facets and final highlight radiance; it is distinct from the artistic highlight-response gain.
 - All three controls update the active shader uniforms immediately without recompilation.
 
+## Phase 3 pointer-breeze requirements
+
+- Pointer movement maps to normalized water coordinates and a bounded directional impulse; sparse browser events use distance as a fallback to velocity.
+- The disturbance uses an elliptical spatial falloff aligned to pointer direction and two low-amplitude wave components, never a radial ring function.
+- Input influence is capped at `1`, held for 180 ms, then decays exponentially. Pointer leave stops sampling but does not snap the current response to zero.
+- The default breeze-strength multiplier is `0.42`, adjustable from `0–1` in Glitter Lab.
+- The disturbance enters the existing height field, so water slopes and attached highlights respond together.
+
 ## Later-phase requirements
 
-- Phase 3: bounded pointer breeze with spatial/temporal decay and no splash/ring/trail language.
 - Phase 4: restrained glow, rhythm tuning, performance scaling, final visual polish.
 - Phase 5: expanded tests, cross-browser/responsive verification, accessibility/deployment readiness.
 

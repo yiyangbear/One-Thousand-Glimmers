@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 2 is complete with automated checks passed. The project is paused for human acceptance; Phase 3 has not started.
+Phase 3 is complete with automated checks passed. The project is paused for human acceptance; Phase 4 has not started.
 
 ## Completed
 
@@ -42,6 +42,11 @@ Phase 2 is complete with automated checks passed. The project is paused for huma
 - Kept ordinary visits UI-free and made the taller debug panel viewport-scrollable.
 - Added Playwright assertions for azimuth centroid movement, elevation footprint change, and intensity-driven bright-pixel response.
 - Saved default, left/right azimuth, high-sun, and detail evidence screenshots.
+- Completed Phase 3 with bounded pointer position, motion direction, and influence state feeding the existing water-height shader.
+- Added a directionally stretched local ripple with spatial falloff, a 180 ms sparse-event hold, and exponential idle decay; no radial-wave history or particle trail is stored.
+- Replaced the pending pointer-breeze label with a live `0–1` Glitter Lab control, defaulting to `0.42` and bringing the panel to fifteen implemented sliders.
+- Added Playwright coverage for rapid movement, influence cap, final-frame pixel response, idle recovery, console health, and WebGL state.
+- Repaired the first browser candidate after automation revealed that velocity-only impulses were too weak under sparse pointer events; bounded distance fallback now preserves subtle real interaction without relaxing the test.
 
 ## Current issues and risks
 
@@ -52,6 +57,6 @@ Phase 2 is complete with automated checks passed. The project is paused for huma
 
 ## Next
 
-1. Receive human feedback on the default sun direction and the plausibility of low/high-elevation band shapes.
-2. Keep Phase 3 paused until explicitly requested.
-3. When Phase 3 is authorized, implement the bounded pointer-breeze disturbance in the existing continuous water field.
+1. Receive human feedback on whether the default `0.42` breeze is perceptible yet sufficiently restrained.
+2. Keep Phase 4 paused until explicitly requested.
+3. When Phase 4 is authorized, profile sustained fragment cost and complete final glow/rhythm/performance polish.

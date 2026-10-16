@@ -83,8 +83,20 @@ This user-requested revision follows the point-shape refactor and remains outsid
 
 ## Phase 3 — Pointer breeze
 
-- Track bounded pointer velocity and feed a local disturbance field.
-- Add spatial and temporal decay; verify idle recovery and absence of trails/rings.
+Deliverables:
+
+- Track pointer position plus speed/distance-derived bounded motion impulses without per-frame allocation.
+- Feed a local, directionally stretched disturbance into the continuous water height field.
+- Add spatial Gaussian-like falloff, a short event hold, and exponential temporal decay.
+- Replace Glitter Lab's pending label with a live breeze-strength control.
+
+Acceptance:
+
+- Fast pointer motion produces a measurable local final-frame response while internal influence remains `≤1`.
+- Influence decays below `0.03` after the automated idle interval.
+- No circular rings, splash peaks, jelly deformation, hard trails, or global brightness shift appear in screenshots.
+- Typecheck, lint, unit tests, production build, browser console/WebGL checks, pixel response, and idle-recovery checks pass.
+- Phase 3 is recorded in its own commit, then development pauses for human acceptance.
 
 ## Phase 4 — Polish and performance
 

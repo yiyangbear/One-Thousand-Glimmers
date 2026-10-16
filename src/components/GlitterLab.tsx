@@ -25,6 +25,7 @@ const CONTROLS: readonly ImplementedControl[] = [
   { key: 'clustering', label: '光点聚集程度', min: 0, max: 2, step: 0.01 },
   { key: 'bloomIntensity', label: '高亮辉光强度', min: 0, max: 1.5, step: 0.01 },
   { key: 'waveStrength', label: '水波起伏强度', min: 0, max: 2, step: 0.01 },
+  { key: 'breezeStrength', label: '鼠标微风扰动强度', min: 0, max: 1, step: 0.01 },
   { key: 'waterContrast', label: '水面深浅层次', min: 0.3, max: 2, step: 0.01 },
   { key: 'reflectionBandWidth', label: '主反光区域宽度', min: 0.35, max: 1.6, step: 0.01 },
   { key: 'localCorrelation', label: '局部相关闪烁', min: 0, max: 1, step: 0.01 },
@@ -111,11 +112,6 @@ export function GlitterLab({ settings, onChange }: GlitterLabProps) {
                 />
               </label>
             ))}
-
-            <div className="glitter-lab__pending" aria-label="鼠标微风扰动强度尚未实现">
-              <span>鼠标微风扰动强度</span>
-              <span>未实现 · Phase 3</span>
-            </div>
           </div>
 
           <div className="glitter-lab__actions">

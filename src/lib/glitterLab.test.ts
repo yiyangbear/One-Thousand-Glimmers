@@ -22,6 +22,7 @@ describe('Glitter Lab settings', () => {
       sunElevation: 24,
       sunAzimuth: 28,
       sunIntensity: 1,
+      breezeStrength: 0.42,
     })
   })
 

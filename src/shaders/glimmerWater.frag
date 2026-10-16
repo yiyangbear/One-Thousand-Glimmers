@@ -16,6 +16,10 @@ uniform float uLocalCorrelation;
 uniform float uSunElevation;
 uniform float uSunAzimuth;
 uniform float uSunIntensity;
+uniform float uBreezeStrength;
+uniform vec2 uPointerPosition;
+uniform vec2 uPointerVelocity;
+uniform float uPointerInfluence;
 
 varying vec2 vUv;
 
@@ -68,6 +72,24 @@ float directionalRipple(vec2 p, float time) {
   return (primary + secondary + crossing) / 1.67;
 }
 
+float pointerBreeze(vec2 p, float time) {
+  float aspect = uResolution.x / max(uResolution.y, 1.0);
+  vec2 pointerPosition = vec2((uPointerPosition.x - 0.5) * aspect, uPointerPosition.y - 0.5);
+  vec2 offset = p - pointerPosition;
+  vec2 direction = vec2(uPointerVelocity.x * aspect, uPointerVelocity.y);
+  direction /= max(length(direction), 0.0001);
+  vec2 across = vec2(-direction.y, direction.x);
+
+  float alongDistance = dot(offset, direction);
+  float acrossDistance = dot(offset, across);
+  float radius = mix(0.055, 0.115, uPointerInfluence);
+  vec2 local = vec2(alongDistance / (radius * 1.55), acrossDistance / (radius * 0.72));
+  float falloff = exp(-dot(local, local) * 1.35);
+  float phase = acrossDistance * 52.0 + alongDistance * 8.0 - time * 2.1;
+  float directionalWave = sin(phase) * 0.72 + sin(phase * 1.67 + 1.3) * 0.28;
+  return directionalWave * falloff * uPointerInfluence * uBreezeStrength * 0.045;
+}
+
 float waterHeight(vec2 p, float time) {
   vec2 warped = p + vec2(
     sin(p.y * 4.3 + time * 0.09),
@@ -77,6 +99,7 @@ float waterHeight(vec2 p, float time) {
   broad += sin(dot(warped, normalize(vec2(-0.63, 0.78))) * 14.0 - time * 0.21 + 1.7) * 0.28;
   float middle = sin(dot(warped, normalize(vec2(0.25, 0.97))) * 31.0 + time * 0.34 + sin(p.x * 3.0)) * 0.17;
   float fine = directionalRipple(warped, time) * 0.105;
+  fine += pointerBreeze(warped, time);
   return broad + middle + fine;
 }
 

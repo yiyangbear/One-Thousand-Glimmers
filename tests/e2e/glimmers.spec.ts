@@ -127,12 +127,11 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   const panel = page.getByLabel('Glitter Lab 开发面板')
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(panel).toBeVisible()
-  await expect(panel.locator('input[type="range"]')).toHaveCount(14)
+  await expect(panel.locator('input[type="range"]')).toHaveCount(15)
   await expect(page.getByTestId('control-flickerSpeed')).toHaveAttribute('max', '10')
   await expect(page.getByTestId('control-sunElevation')).toHaveValue('24')
   await expect(page.getByTestId('control-sunAzimuth')).toHaveValue('28')
   await expect(page.getByTestId('control-sunIntensity')).toHaveValue('1')
-  await expect(panel.getByText('未实现 · Phase 3')).toBeVisible()
 
   await page.getByTestId('control-waveStrength').fill('0')
   await page.getByTestId('control-flickerSpeed').fill('0.1')
@@ -291,6 +290,7 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
     sunElevation: 62,
     sunAzimuth: -38,
     sunIntensity: 1.25,
+    breezeStrength: 0.42,
   }
 
   for (const [key, value] of Object.entries(exportedSettings)) {
@@ -321,11 +321,69 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   await expect(page.getByTestId('control-sunElevation')).toHaveValue('24')
   await expect(page.getByTestId('control-sunAzimuth')).toHaveValue('28')
   await expect(page.getByTestId('control-sunIntensity')).toHaveValue('1')
+  await expect(page.getByTestId('control-breezeStrength')).toHaveValue('0.42')
 
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeHidden()
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeVisible()
+
+  const webglError = await canvas.evaluate((element) => {
+    const context = (element as HTMLCanvasElement).getContext('webgl2')
+    return context?.getError()
+  })
+  expect(webglError).toBe(0)
+  expect(errors).toEqual([])
+})
+
+test('pointer breeze is bounded, affects the water, and fades after movement stops', async ({ page }) => {
+  test.setTimeout(60_000)
+  const errors = collectRuntimeErrors(page)
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/?debug=true')
+  const panel = page.getByLabel('Glitter Lab 开发面板')
+  const canvas = page.locator('canvas[data-renderer="ready"]')
+  await expect(canvas).toBeVisible()
+  await expect(page.getByTestId('control-breezeStrength')).toBeVisible()
+
+  await page.getByTestId('control-flickerSpeed').fill('0.1')
+  await page.getByTestId('control-waveStrength').fill('1')
+  await page.getByTestId('control-breezeStrength').fill('1')
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+
+  await page.mouse.move(220, 450)
+  await page.waitForTimeout(180)
+  const idleScreenshot = await page.screenshot({
+    path: 'artifacts/screenshots/phase-3-breeze-idle.png',
+  })
+
+  await page.mouse.move(760, 450)
+  await page.waitForTimeout(60)
+  const activeInfluence = await canvas.evaluate(
+    (element) => (element as HTMLCanvasElement & { __pointerInfluence?: number }).__pointerInfluence ?? 0,
+  )
+  const activeScreenshot = await page.screenshot({
+    path: 'artifacts/screenshots/phase-3-breeze-active.png',
+  })
+  expect(activeInfluence).toBeGreaterThan(0.2)
+  expect(activeInfluence).toBeLessThanOrEqual(1)
+
+  const activeChangedPixels = await countChangedPixelsBetweenScreenshots(
+    page,
+    idleScreenshot,
+    activeScreenshot,
+  )
+  expect(activeChangedPixels).toBeGreaterThan(100)
+
+  await page.waitForTimeout(2_100)
+  const recoveredInfluence = await canvas.evaluate(
+    (element) => (element as HTMLCanvasElement & { __pointerInfluence?: number }).__pointerInfluence ?? 0,
+  )
+  await page.screenshot({ path: 'artifacts/screenshots/phase-3-breeze-recovered.png' })
+  expect(recoveredInfluence).toBeLessThan(0.03)
 
   const webglError = await canvas.evaluate((element) => {
     const context = (element as HTMLCanvasElement).getContext('webgl2')
