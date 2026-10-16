@@ -30,8 +30,9 @@
 
 - Ordinary visits keep the artwork free of UI. `?debug=true` reveals a restrained, collapsible panel in the upper-right corner.
 - Implemented live parameters are density, size, flicker speed, highlight intensity, fine-point ratio, clustering, bright-layer halo intensity, wave strength, water-depth contrast, main reflection-band width, and local flicker correlation.
-- The current defaults use the latest supplied tuning (`density 0.61`, `size 1.65`, `flickerSpeed 3`, `highlightIntensity 2.53`, `clustering 0`, `bloomIntensity 0.34`, `waveStrength 0.36`, `finePointRatio 0.96`, `waterContrast 1.6`, reflection-band width `0.76`, and local correlation `0.7`).
-- Flicker speed ranges from `0.1` to `6`. Both point-level envelopes and smooth neighborhood pulses respond to it; the upper half is intentionally an exploratory development range rather than an art-directed presentation default.
+- The current defaults use the latest supplied tuning (`density 0.87`, `size 1.65`, `flickerSpeed 6`, `highlightIntensity 2.53`, `clustering 0`, `bloomIntensity 0.66`, `waveStrength 0.38`, `finePointRatio 0.96`, `waterContrast 1.6`, reflection-band width `0.82`, and local correlation `0.7`).
+- Flicker speed ranges from `0.1` to `10`. Both point-level envelopes and smooth neighborhood pulses respond to it; values above the default `6` are an exploratory development range.
+- The temporal envelope combines broad, secondary, slow-drift, and low-amplitude high-frequency components. Faster settings must preserve continuous easing and unsynchronized local detail rather than becoming binary opacity toggles.
 - Reset restores those exact defaults. Copy exports the current parameters as formatted JSON.
 - Pointer breeze strength is shown as unavailable until Phase 3 and must not be represented by an inactive or misleading slider.
 - Control changes update the active `ShaderMaterial` uniforms without a reload or material recompilation.
@@ -50,7 +51,7 @@
 - A deterministic broken-field mask creates gaps, strings, and local patches inside the band without a hard silhouette.
 - Candidate activation depends on the same directional ripple field and approximate surface slope that shade the water.
 - Smooth low-frequency neighborhood pulses correlate nearby glints while retaining point-level phases and scale-specific timing.
-- Density is reduced to `0.61` by default; spatial organization, not a global density increase, creates the stronger sun-glitter reading.
+- Density is `0.87` by default; the reflection envelope and surface attachment still prevent this from becoming a uniform full-screen field.
 
 ## Later-phase requirements
 

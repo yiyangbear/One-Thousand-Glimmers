@@ -174,3 +174,30 @@ Evidence:
 Validation limitations:
 
 - Whether speed `3`, `4.8`, or another value best matches remembered sunlight remains a subjective motion judgment that requires live human viewing.
+
+## Interim tuning — Refined fast cadence
+
+Status: automated checks passed on 2026-10-16; human cadence acceptance pending. Phase 2 remains paused.
+
+Executed checks:
+
+- Adopted the supplied eleven-value parameter set as the exact reset/default state: density `0.87`, size `1.65`, speed `6`, highlight `2.53`, clustering `0`, bloom `0.66`, wave strength `0.38`, fine-point ratio `0.96`, water contrast `1.6`, band width `0.82`, and local correlation `0.7`.
+- Expanded the live speed range from `0.1–6` to `0.1–10`.
+- Refined the point envelope from three to four deterministic frequency components. The added component has only `0.14` weight and is phase-offset per stable site, preserving fine variation without dominating the broad envelope.
+- Added a `0.22`-weight secondary harmonic to the smooth regional pulse, preserving neighborhood correlation while preventing each patch from reading as one simple oscillator.
+- `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` — passed. Unit tests remain 2 files / 5 tests; the existing non-failing Vite chunk-size warning remains.
+- `npm run test:e2e` — passed in Playwright Chromium, 2 tests in 54.6 seconds. Speed-range exposure, live pixel response, JSON export, exact reset, panel behavior, console/page errors, and WebGL `getError() === 0` were verified.
+- Dynamic cadence assertion — passed. With wave strength set to zero, screenshots 350 ms apart at speed `10` changed more than 1.5× as many sampled pixels as the same interval at speed `0.1`.
+- Screenshot inspection — passed. Default speed `6` and comparison speed `8.5` retain a tapered broken reflection region, quiet margins, fine/medium/rare-bright hierarchy, and rare-layer-only glow without blank frames or hard global flashes.
+- ImageMagick inspection — default and fast screenshots are 1440×900 with 3,170 and 2,997 colors; means are 0.2636 and 0.2642, with no clipped white field. The 560×560 detail contains 1,269 colors.
+
+Evidence:
+
+- `artifacts/screenshots/refined-cadence-default.png`
+- `artifacts/screenshots/refined-cadence-fast.png`
+- `artifacts/screenshots/refined-cadence-detail.png`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Validation limitations:
+
+- Static evidence cannot determine whether speed `6`, `8.5`, or another value offers the best long-viewing cadence. Final temporal refinement remains a human art judgment in the live preview.

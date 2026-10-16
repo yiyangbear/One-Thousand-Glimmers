@@ -16,7 +16,7 @@ type ImplementedControl = {
 const CONTROLS: readonly ImplementedControl[] = [
   { key: 'density', label: '光点密度', min: 0, max: 2, step: 0.01 },
   { key: 'size', label: '光点大小', min: 0.5, max: 2, step: 0.01 },
-  { key: 'flickerSpeed', label: '闪烁速度', min: 0.1, max: 6, step: 0.01 },
+  { key: 'flickerSpeed', label: '闪烁速度', min: 0.1, max: 10, step: 0.01 },
   { key: 'highlightIntensity', label: '高光强度', min: 0, max: 3, step: 0.01 },
   { key: 'finePointRatio', label: '微光占比', min: 0.2, max: 1.2, step: 0.01 },
   { key: 'clustering', label: '光点聚集程度', min: 0, max: 2, step: 0.01 },

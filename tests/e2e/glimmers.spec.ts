@@ -99,7 +99,7 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(panel).toBeVisible()
   await expect(panel.locator('input[type="range"]')).toHaveCount(11)
-  await expect(page.getByTestId('control-flickerSpeed')).toHaveAttribute('max', '6')
+  await expect(page.getByTestId('control-flickerSpeed')).toHaveAttribute('max', '10')
   await expect(panel.getByText('未实现 · Phase 3')).toBeVisible()
 
   await page.getByTestId('control-waveStrength').fill('0')
@@ -115,7 +115,7 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
     element.style.visibility = 'visible'
   })
 
-  await page.getByTestId('control-flickerSpeed').fill('6')
+  await page.getByTestId('control-flickerSpeed').fill('10')
   await page.waitForTimeout(300)
   await panel.evaluate((element) => {
     element.style.visibility = 'hidden'
@@ -135,7 +135,7 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
 
   await page.waitForTimeout(900)
   await page.screenshot({
-    path: 'artifacts/screenshots/glint-cadence-default.png',
+    path: 'artifacts/screenshots/refined-cadence-default.png',
     fullPage: true,
   })
 
@@ -169,16 +169,16 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(boostedBrightPixels).toBeGreaterThan(mutedBrightPixels + 50)
 
   const exportedSettings = {
-    density: 0.61,
+    density: 0.87,
     size: 1.65,
-    flickerSpeed: 4.8,
+    flickerSpeed: 8.5,
     highlightIntensity: 2.53,
     clustering: 0,
-    bloomIntensity: 0.34,
-    waveStrength: 0.36,
+    bloomIntensity: 0.66,
+    waveStrength: 0.38,
     finePointRatio: 0.96,
     waterContrast: 1.6,
-    reflectionBandWidth: 0.76,
+    reflectionBandWidth: 0.82,
     localCorrelation: 0.7,
   }
 
@@ -187,11 +187,11 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   }
   await page.waitForTimeout(180)
   await page.screenshot({
-    path: 'artifacts/screenshots/glint-cadence-fast.png',
+    path: 'artifacts/screenshots/refined-cadence-fast.png',
     fullPage: true,
   })
   await page.screenshot({
-    path: 'artifacts/screenshots/glint-cadence-detail.png',
+    path: 'artifacts/screenshots/refined-cadence-detail.png',
     clip: { x: 520, y: 150, width: 560, height: 560 },
   })
 
@@ -201,12 +201,12 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   expect(clipboard).toEqual(exportedSettings)
 
   await panel.getByRole('button', { name: '恢复默认' }).click()
-  await expect(page.getByTestId('control-density')).toHaveValue('0.61')
+  await expect(page.getByTestId('control-density')).toHaveValue('0.87')
   await expect(page.getByTestId('control-size')).toHaveValue('1.65')
-  await expect(page.getByTestId('control-flickerSpeed')).toHaveValue('3')
-  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.34')
+  await expect(page.getByTestId('control-flickerSpeed')).toHaveValue('6')
+  await expect(page.getByTestId('control-bloomIntensity')).toHaveValue('0.66')
   await expect(page.getByTestId('control-finePointRatio')).toHaveValue('0.96')
-  await expect(page.getByTestId('control-reflectionBandWidth')).toHaveValue('0.76')
+  await expect(page.getByTestId('control-reflectionBandWidth')).toHaveValue('0.82')
 
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeHidden()

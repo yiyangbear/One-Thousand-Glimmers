@@ -43,5 +43,6 @@ Automatic checks can reject blank or structurally broken output, but final judgm
 - Tiny glimmers belong primarily to a tapered, broken reflection band. Outside it, water and negative space dominate; global starfield coverage is a failure.
 - Medium points provide rhythm; rare bright cores provide focus. Only the rare bright layer earns a restrained halo.
 - Point locations stay spatially stable. Their apparent life comes from individual envelopes blended with a smooth neighborhood pulse, so small patches wake together without synchronizing the frame.
+- Faster cadence must retain layered easing: broad breathing, point-level variation, and a low-amplitude high-frequency shimmer may overlap, but no speed setting should reduce a glint to binary on/off popping.
 - Fine-scale glint eligibility follows the same directional ripple field and slope response used to shade the water. Highlights must feel selected from the surface, not composited over it.
 - Water should sit deeper than the lights: cool gray-blue, cyan-gray, and restrained gray-green, with low-frequency depth plus fine directional ripple structure that never turns into drawn wave lines.

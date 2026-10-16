@@ -97,8 +97,11 @@ float reflectionEnvelope(vec2 uv) {
 
 float regionalPulseCorner(vec2 id, float tier, float time) {
   float phase = hash21(id + tier * 17.3) * PI * 2.0;
-  float rate = mix(0.52, 1.12, hash21(id + tier * 9.7 + 31.4));
-  return sin(time * uFlickerSpeed * rate + phase + sin(time * 0.11 + phase) * 0.3) * 0.5 + 0.5;
+  float rate = mix(0.6, 1.28, hash21(id + tier * 9.7 + 31.4));
+  float localTime = time * uFlickerSpeed;
+  float broadPulse = sin(localTime * rate + phase + sin(time * 0.11 + phase) * 0.3);
+  float finePulse = sin(localTime * rate * 1.93 + phase * 1.47 + tier * 1.7);
+  return clamp((broadPulse * 0.78 + finePulse * 0.22) * 0.5 + 0.5, 0.0, 1.0);
 }
 
 float regionalPulse(vec2 uv, float tier, float time) {
@@ -116,17 +119,18 @@ float regionalPulse(vec2 uv, float tier, float time) {
 
 float temporalEnvelope(vec2 id, vec2 uv, float tier, float time) {
   float phase = hash21(id - 44.6) * PI * 2.0;
-  float rate = mix(0.68, 2.18, hash21(id + 92.8));
+  float rate = mix(0.76, 2.46, hash21(id + 92.8));
   float localTime = time * uFlickerSpeed;
-  float signal = sin(localTime * rate + phase) * 0.52;
-  signal += sin(localTime * rate * 0.413 + phase * 1.71) * 0.31;
-  signal += sin(localTime * 0.13 + phase * 0.37) * 0.17;
+  float signal = sin(localTime * rate + phase) * 0.44;
+  signal += sin(localTime * rate * 0.413 + phase * 1.71) * 0.27;
+  signal += sin(localTime * 0.13 + phase * 0.37) * 0.15;
+  signal += sin(localTime * rate * 2.31 + phase * 0.83 + tier * 1.17) * 0.14;
   signal = signal * 0.5 + 0.5;
 
   float individual;
-  if (tier < 0.5) individual = 0.18 + smoothstep(0.14, 0.88, signal) * 0.82;
-  else if (tier < 1.5) individual = smoothstep(0.26, 0.93, signal);
-  else individual = pow(smoothstep(0.57, 0.97, signal), 1.45);
+  if (tier < 0.5) individual = 0.16 + smoothstep(0.18, 0.82, signal) * 0.84;
+  else if (tier < 1.5) individual = smoothstep(0.3, 0.88, signal);
+  else individual = pow(smoothstep(0.6, 0.93, signal), 1.42);
 
   float shared = mix(0.42, 1.22, regionalPulse(uv, tier, time));
   return clamp(individual * mix(1.0, shared, uLocalCorrelation), 0.0, 1.24);
