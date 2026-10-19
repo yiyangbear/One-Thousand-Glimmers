@@ -133,3 +133,43 @@ Acceptance:
 - The production artifact resolves assets beneath `/One-Thousand-Glimmers/` for project Pages deployment.
 - Release documents describe local use, known limitations, GitHub push, Pages setup, deployment verification, and rollback.
 - Phase 5 is recorded in its own commit. Final subjective art acceptance remains explicitly human-owned.
+
+## Post-release refinement — Autonomous sun azimuth
+
+Deliverables:
+
+- Treat the Glitter Lab azimuth as an art-directed center and derive a slow autonomous azimuth from visible-session time.
+- Use deterministic, long, mismatched cycles so the motion remains continuous without an obvious short loop.
+- Advance from visible wall-clock time rather than frame count, pause accumulation while the page is hidden, and slow the evolution under `prefers-reduced-motion`.
+- Expose current/center azimuth telemetry on the canvas and add unit plus cross-browser checks.
+
+Acceptance:
+
+- The default starts at the accepted `28°` center, changes by less than `1°` during the initial automated observation window, and reaches more than `12°` of displacement after one simulated minute.
+- Automatic movement stays inside the supported `-70–70°` shader range and does not replace manual center control.
+- Typecheck, lint, unit tests, production build, all existing Playwright checks, browser console/WebGL checks, and the 60-second soak pass.
+- Long-viewing pace and naturalness remain a human art-acceptance item.
+
+## Post-release refinement — Press and drag water interaction
+
+Deliverables:
+
+- Replace hover-driven breeze activation with primary pointer press, capture, drag, release, and cancel semantics.
+- Add a visible standalone press response plus a directionally stretched drag response driven by speed and cumulative gesture distance.
+- Couple the readable response to broken existing glint sites and water-ripple facets so stronger feedback still appears to emerge from the river rather than from an overlay.
+- Keep the accepted interaction readable after reducing its footprint area to one sixth, and ease both click and drag strength in over a short time-based attack rather than switching them on in one frame.
+- Refine water depth with multiple low-contrast directional scales whose phase and amplitude are broken by the existing procedural depth fields; avoid visible stripe patterns.
+- Keep drag strength stable while pressed, then hold briefly and decay without rings, splashes, or retained trails.
+- Emit separate click/drag sound events and play the bundled creator-made WAV effects through an independent Web Audio one-shot player, with environment-variable replacement or opt-out support.
+- Route both effects through a smoothed master gain, default it to a barely audible `0.10`, and expose that gain as a live `0–1` Glitter Lab control without coupling it to the shader loop.
+- Share the lower-right sound-toggle intent with the interaction-audio bridge so one visible control mutes or enables every audible layer.
+
+Acceptance:
+
+- A standalone click changes the rendered pixels at the accepted default breeze strength while drag influence stays near zero.
+- A press-and-drag gesture produces bounded drag influence and a measurable frame response even when autonomous `waveStrength` is zero.
+- Both envelopes recover below `0.03`, and exactly one click plus at most one drag sound request is emitted per gesture.
+- With sound variables unset, no interaction audio resource is requested and the artwork remains silent.
+- Changing interaction-sound volume after Web Audio initialization updates the connected master gain immediately without restarting or reloading either sound.
+- With the lower-right control off, click/drag events start no audio source; disabling it after initialization smoothly targets interaction gain zero, and enabling it restores the configured master level.
+- Typecheck, lint, unit tests, production build, browser console/WebGL checks, screenshots, and full cross-browser regression pass.

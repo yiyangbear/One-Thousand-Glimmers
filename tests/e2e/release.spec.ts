@@ -16,13 +16,16 @@ test('@cross-browser renders a healthy WebGL artwork', async ({ page }) => {
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(canvas).toBeVisible()
   await expect(page.getByLabel('Glitter Lab 开发面板')).toHaveCount(0)
-  const musicToggle = page.getByRole('button', { name: '开启背景音乐' })
+  const musicToggle = page.getByRole('button', { name: '开启声音' })
   const audioEngine = page.getByTestId('ambient-audio-engine')
   await expect(musicToggle).toBeVisible()
   await expect(musicToggle).toHaveAttribute('aria-pressed', 'false')
   await expect(audioEngine).toHaveAttribute('data-context-state', 'uninitialized')
   await expect(audioEngine).toHaveAttribute('data-loop', 'true')
+  await expect(canvas).toHaveAttribute('data-sun-azimuth-center', '28.00')
+  const initialSunAzimuth = Number(await canvas.getAttribute('data-sun-azimuth'))
   await page.waitForTimeout(1_800)
+  const laterSunAzimuth = Number(await canvas.getAttribute('data-sun-azimuth'))
 
   const state = await canvas.evaluate((element) => {
     const htmlCanvas = element as HTMLCanvasElement
@@ -40,6 +43,8 @@ test('@cross-browser renders a healthy WebGL artwork', async ({ page }) => {
   expect(state.pixelRatio).toBeGreaterThanOrEqual(1)
   expect(state.pixelRatio).toBeLessThanOrEqual(1.75)
   expect(state.error).toBe(0)
+  expect(laterSunAzimuth).toBeGreaterThan(initialSunAzimuth + 0.05)
+  expect(laterSunAzimuth).toBeLessThan(initialSunAzimuth + 1)
   expect(errors).toEqual([])
 })
 
@@ -114,7 +119,7 @@ test('Glitter Lab is keyboard operable and reduced motion is honored', async ({ 
   await summary.press('Enter')
   await expect(panel.getByText('实时视觉参数')).toBeVisible()
 
-  await expect(panel.locator('input[type="range"]')).toHaveCount(15)
+  await expect(panel.locator('input[type="range"]')).toHaveCount(16)
   const labels = await panel.locator('label').allTextContents()
   expect(labels.every((label) => label.trim().length > 0)).toBe(true)
 })
@@ -126,6 +131,8 @@ test('runs autonomously for sixty seconds without runtime or WebGL errors', asyn
 
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(canvas).toBeVisible()
+  const initialSunAzimuth = Number(await canvas.getAttribute('data-sun-azimuth'))
+  await page.screenshot({ path: 'artifacts/screenshots/sun-motion-start.png' })
   await page.waitForTimeout(60_000)
 
   const state = await canvas.evaluate((element) => {
@@ -134,13 +141,16 @@ test('runs autonomously for sixty seconds without runtime or WebGL errors', asyn
     return {
       averageFps: Number(htmlCanvas.dataset.averageFps ?? 0),
       error: context?.getError(),
+      sunAzimuth: Number(htmlCanvas.dataset.sunAzimuth),
       tier: htmlCanvas.dataset.qualityTier,
     }
   })
   await page.screenshot({ path: 'artifacts/screenshots/phase-5-soak-60s.png' })
+  await page.screenshot({ path: 'artifacts/screenshots/sun-motion-60s.png' })
 
   expect(state.averageFps).toBeGreaterThan(0)
   expect(['full', 'balanced', 'reduced']).toContain(state.tier)
   expect(state.error).toBe(0)
+  expect(state.sunAzimuth).toBeGreaterThan(initialSunAzimuth + 12)
   expect(errors).toEqual([])
 })

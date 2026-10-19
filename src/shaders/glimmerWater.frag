@@ -20,10 +20,13 @@ uniform float uBreezeStrength;
 uniform vec2 uPointerPosition;
 uniform vec2 uPointerVelocity;
 uniform float uPointerInfluence;
+uniform float uPointerClickInfluence;
 
 varying vec2 vUv;
 
 const float PI = 3.14159265359;
+// Scaling both axes by sqrt(1 / 6) reduces the interaction footprint area to one sixth.
+const float INTERACTION_FOOTPRINT_SCALE = 0.40824829046;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -82,12 +85,58 @@ float pointerBreeze(vec2 p, float time) {
 
   float alongDistance = dot(offset, direction);
   float acrossDistance = dot(offset, across);
-  float radius = mix(0.075, 0.15, uPointerInfluence);
+  float radius = mix(0.1, 0.19, uPointerInfluence) * INTERACTION_FOOTPRINT_SCALE;
   vec2 local = vec2(alongDistance / (radius * 1.7), acrossDistance / (radius * 0.82));
   float falloff = exp(-dot(local, local) * 1.15);
   float phase = acrossDistance * 52.0 + alongDistance * 8.0 - time * 2.1;
   float directionalWave = sin(phase) * 0.72 + sin(phase * 1.67 + 1.3) * 0.28;
-  return directionalWave * falloff * uPointerInfluence * uBreezeStrength * 0.045;
+  return directionalWave * falloff * uPointerInfluence * uBreezeStrength * 0.068;
+}
+
+float pointerPress(vec2 p, float time) {
+  float aspect = uResolution.x / max(uResolution.y, 1.0);
+  vec2 pointerPosition = vec2((uPointerPosition.x - 0.5) * aspect, uPointerPosition.y - 0.5);
+  vec2 offset = p - pointerPosition;
+  vec2 direction = normalize(vec2(0.2, 0.98));
+  vec2 across = vec2(-direction.y, direction.x);
+  float alongDistance = dot(offset, direction);
+  float acrossDistance = dot(offset, across);
+  vec2 local = vec2(
+    alongDistance / (0.13 * INTERACTION_FOOTPRINT_SCALE),
+    acrossDistance / (0.095 * INTERACTION_FOOTPRINT_SCALE)
+  );
+  float falloff = exp(-dot(local, local) * 1.3);
+  float phase = alongDistance * 46.0 + acrossDistance * 17.0 - time * 1.35;
+  float localFacet = sin(phase) * 0.68 + sin(phase * 1.73 + 0.9) * 0.32;
+  return localFacet * falloff * uPointerClickInfluence * uBreezeStrength * 0.11;
+}
+
+float pointerInteractionHeight(vec2 p, float time) {
+  return pointerBreeze(p, time) + pointerPress(p, time);
+}
+
+vec2 pointerInteractionMasks(vec2 p) {
+  float aspect = uResolution.x / max(uResolution.y, 1.0);
+  vec2 pointerPosition = vec2((uPointerPosition.x - 0.5) * aspect, uPointerPosition.y - 0.5);
+  vec2 offset = p - pointerPosition;
+  vec2 waterDirection = normalize(vec2(0.2, 0.98));
+  vec2 waterAcross = vec2(-waterDirection.y, waterDirection.x);
+  vec2 clickLocal = vec2(
+    dot(offset, waterDirection) / (0.2 * INTERACTION_FOOTPRINT_SCALE),
+    dot(offset, waterAcross) / (0.14 * INTERACTION_FOOTPRINT_SCALE)
+  );
+  float clickMask = exp(-dot(clickLocal, clickLocal) * 1.18);
+
+  vec2 dragDirection = vec2(uPointerVelocity.x * aspect, uPointerVelocity.y);
+  dragDirection /= max(length(dragDirection), 0.0001);
+  vec2 dragAcross = vec2(-dragDirection.y, dragDirection.x);
+  float dragRadius = mix(0.13, 0.21, uPointerInfluence) * INTERACTION_FOOTPRINT_SCALE;
+  vec2 dragLocal = vec2(
+    dot(offset, dragDirection) / (dragRadius * 2.0),
+    dot(offset, dragAcross) / (dragRadius * 0.72)
+  );
+  float dragMask = exp(-dot(dragLocal, dragLocal) * 1.08);
+  return vec2(clickMask, dragMask);
 }
 
 float autonomousWaterHeight(vec2 p, float time) {
@@ -112,13 +161,15 @@ vec2 autonomousWaterSlope(vec2 p, float time) {
 }
 
 vec2 pointerBreezeSlope(vec2 p, float time) {
-  if (uPointerInfluence < 0.001 || uBreezeStrength < 0.001) return vec2(0.0);
+  if (max(uPointerInfluence, uPointerClickInfluence) < 0.001 || uBreezeStrength < 0.001) {
+    return vec2(0.0);
+  }
 
   const float epsilon = 0.0025;
-  float left = pointerBreeze(p - vec2(epsilon, 0.0), time);
-  float right = pointerBreeze(p + vec2(epsilon, 0.0), time);
-  float down = pointerBreeze(p - vec2(0.0, epsilon), time);
-  float up = pointerBreeze(p + vec2(0.0, epsilon), time);
+  float left = pointerInteractionHeight(p - vec2(epsilon, 0.0), time);
+  float right = pointerInteractionHeight(p + vec2(epsilon, 0.0), time);
+  float down = pointerInteractionHeight(p - vec2(0.0, epsilon), time);
+  float up = pointerInteractionHeight(p + vec2(0.0, epsilon), time);
   return vec2(right - left, up - down) / (2.0 * epsilon) * 0.008;
 }
 
@@ -146,8 +197,8 @@ float reflectionEnvelope(vec2 uv) {
   float vertical = smoothstep(nearFadeStart, nearFadeEnd, uv.y);
   vertical *= 1.0 - smoothstep(farFadeStart, farFadeEnd, uv.y);
 
-  float horizontalShift = sin(azimuth) * 0.12;
-  float directionalTilt = sin(azimuth) * 0.18;
+  float horizontalShift = sin(azimuth) * 0.2;
+  float directionalTilt = sin(azimuth) * 0.22;
   float center = 0.5 + horizontalShift + (uv.y - 0.5) * directionalTilt;
   center += sin(uv.y * 8.0 + 0.6 + azimuth) * 0.012;
   float nearWidth = mix(0.15, 0.24, elevation);
@@ -294,6 +345,25 @@ void main() {
   float crossField = quietFbm(waterPosition * vec2(3.4, 5.2) + vec2(-2.3, uTime * 0.009));
   float microField = valueNoise(waterPosition * vec2(19.0, 31.0) + vec2(uTime * 0.022, -uTime * 0.015));
   float rippleField = directionalRipple(waterPosition, uTime);
+  float layerWarp = (depthField - 0.5) * 2.1 + (crossField - 0.5) * 0.7;
+  float longRipple = sin(
+    dot(waterPosition, normalize(vec2(0.32, 0.95))) * 17.5 + layerWarp - uTime * 0.13
+  );
+  float middleRipple = sin(
+    dot(waterPosition, normalize(vec2(0.2, 0.98))) * 34.0 - layerWarp * 0.62 + uTime * 0.19
+  );
+  float capillaryRipple = sin(
+    dot(waterPosition, normalize(vec2(0.27, 0.96))) * 73.0 + rippleField * 0.46 - uTime * 0.31
+  );
+  float layeredRipple = (longRipple * 0.52 + middleRipple * 0.33 + capillaryRipple * 0.15);
+  layeredRipple *= mix(0.68, 1.0, crossField);
+  vec2 interactionMasks = pointerInteractionMasks(waterPosition);
+  float dragGain = sqrt(clamp(uBreezeStrength, 0.0, 1.0));
+  float clickGain = smoothstep(0.0, 0.42, uBreezeStrength);
+  float clickResponse = interactionMasks.x * uPointerClickInfluence * clickGain;
+  float dragResponse = interactionMasks.y * uPointerInfluence * dragGain;
+  float waterInteraction = clamp(clickResponse * 1.25 + dragResponse * 0.72, 0.0, 1.0);
+  float glintInteraction = clamp(clickResponse * 1.5 + dragResponse * 0.8, 0.0, 1.0);
   float autonomousSlopeShade = clamp(
     0.5 + autonomousSlope.y * 1.65 - autonomousSlope.x * 0.58,
     0.0,
@@ -303,15 +373,29 @@ void main() {
   float tone = 0.35;
   tone += (depthField - 0.5) * 0.58 * uWaterContrast;
   tone += (crossField - 0.5) * 0.16 * uWaterContrast;
+  tone += (depthField - 0.5) * (crossField - 0.5) * 0.15 * uWaterContrast;
   tone += (microField - 0.5) * 0.052 * uWaterContrast;
   tone += rippleField * 0.041 * uWaveStrength;
+  tone += layeredRipple * 0.022 * uWaveStrength;
   tone += (autonomousSlopeShade - 0.5) * 0.11 * uWaveStrength;
   tone += breezeSlopeShade * 0.24;
+  tone += waterInteraction * (0.105 + rippleField * 0.024);
   vec3 deepWater = vec3(0.018, 0.052, 0.068);
   vec3 liftedWater = vec3(0.068, 0.132, 0.15);
   vec3 color = mix(deepWater, liftedWater, clamp(tone, 0.02, 0.9));
   color += vec3(-0.004, 0.006, 0.01) * (crossField - 0.45) * uWaterContrast;
   color += vec3(0.009, 0.012, 0.01) * rippleField * uWaveStrength;
+  color += vec3(0.006, 0.009, 0.009) * layeredRipple * uWaveStrength;
+  float interactionFacet = smoothstep(0.12, 0.82, rippleField * 0.5 + 0.5);
+  interactionFacet *= mix(0.58, 1.0, microField);
+  float interactionDapple = smoothstep(
+    0.48,
+    0.76,
+    (rippleField * 0.5 + 0.5) * 0.62 + microField * 0.38
+  );
+  color += vec3(0.01, 0.016, 0.017) * waterInteraction * (0.74 + rippleField * 0.16);
+  color += vec3(0.014, 0.019, 0.019) * waterInteraction * interactionFacet;
+  color += vec3(0.065, 0.075, 0.073) * waterInteraction * (interactionDapple - 0.24);
 
   float envelope = reflectionEnvelope(vUv);
   float patchNoise = quietFbm(vec2(vUv.x * 4.2 + vUv.y * 0.65, vUv.y * 6.4) + vec2(4.7, -2.1));
@@ -324,7 +408,14 @@ void main() {
   float surfaceAttachment = mix(0.28, 1.0, normalMatch) * mix(0.42, 1.0, rippleAffinity);
   float solarActivity = mix(0.78, 1.2, sqrt(clamp(uSunIntensity, 0.2, 2.0) * 0.5));
   solarActivity *= mix(1.08, 0.88, sunElevation01());
-  float activity = clamp(envelope * brokenField * surfaceAttachment * solarActivity, 0.0, 1.0);
+  float localInteractionActivity = clickResponse * 1.25 + dragResponse * 0.5;
+  localInteractionActivity *= mix(0.5, 0.9, sqrt(envelope));
+  localInteractionActivity *= brokenField * mix(0.62, 1.0, rippleAffinity);
+  float activity = clamp(
+    envelope * brokenField * surfaceAttachment * solarActivity + localInteractionActivity,
+    0.0,
+    1.0
+  );
   float fineHalo = 0.0;
   float fineWarmth = 0.0;
   float mediumHalo = 0.0;
@@ -334,6 +425,9 @@ void main() {
   float fine = glimmerLayer(vUv, slope, desiredSlope, uTime, activity, 0.0, fineHalo, fineWarmth);
   float medium = glimmerLayer(vUv, slope, desiredSlope, uTime, activity, 1.0, mediumHalo, mediumWarmth);
   float bright = glimmerLayer(vUv, slope, desiredSlope, uTime, activity, 2.0, brightHalo, brightWarmth);
+  fine *= 1.0 + glintInteraction * 1.9;
+  medium *= 1.0 + glintInteraction * 1.25;
+  bright *= 1.0 + glintInteraction * 0.35;
 
   vec3 coolSilver = vec3(0.72, 0.8, 0.82);
   vec3 clearSilver = vec3(0.9, 0.93, 0.89);

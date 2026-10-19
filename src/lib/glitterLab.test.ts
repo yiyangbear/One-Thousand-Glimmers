@@ -23,6 +23,7 @@ describe('Glitter Lab settings', () => {
       sunAzimuth: 28,
       sunIntensity: 1,
       breezeStrength: 0.42,
+      interactionSoundVolume: 0.1,
     })
   })
 

@@ -102,40 +102,45 @@ test('ambient music is opt-in, fades smoothly, pauses, and resumes in place', as
   test.setTimeout(45_000)
   await page.goto('/')
   const engine = page.getByTestId('ambient-audio-engine')
-  const musicToggle = page.getByRole('button', { name: '开启背景音乐' })
+  const interactionEngine = page.getByTestId('interaction-audio-engine')
+  const musicToggle = page.getByRole('button', { name: '开启声音' })
 
   await expect(musicToggle).toHaveAttribute('aria-pressed', 'false')
   await expect(engine).toHaveAttribute('data-context-state', 'uninitialized')
+  await expect(interactionEngine).toHaveAttribute('data-enabled', 'false')
 
   await musicToggle.click()
-  const playingToggle = page.getByRole('button', { name: '关闭背景音乐' })
+  const playingToggle = page.getByRole('button', { name: '关闭声音' })
   await expect(playingToggle).toHaveAttribute(
     'data-state',
     'fading-in',
     { timeout: 10_000 },
   )
   await expect(engine).toHaveAttribute('data-context-state', 'running')
+  await expect(interactionEngine).toHaveAttribute('data-enabled', 'true')
   await expect(engine).toHaveAttribute('data-channels', '2')
   await expect(engine).toHaveAttribute('data-sample-rate', '44100')
-  await page.waitForTimeout(2_100)
+  await page.waitForTimeout(2_300)
   await expect(playingToggle).toHaveAttribute('data-state', 'on')
 
   await playingToggle.click()
-  await expect(page.getByRole('button', { name: '开启背景音乐' })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: '开启声音' })).toHaveAttribute(
     'data-state',
     'fading-out',
   )
-  await page.waitForTimeout(1_600)
+  await expect(interactionEngine).toHaveAttribute('data-enabled', 'false')
+  await page.waitForTimeout(2_100)
   await expect(engine).toHaveAttribute('data-context-state', 'suspended')
   const pausedOffset = Number(await engine.getAttribute('data-offset'))
   expect(pausedOffset).toBeGreaterThan(2)
 
-  await page.getByRole('button', { name: '开启背景音乐' }).click()
-  await expect(page.getByRole('button', { name: '关闭背景音乐' })).toHaveAttribute(
+  await page.getByRole('button', { name: '开启声音' }).click()
+  await expect(page.getByRole('button', { name: '关闭声音' })).toHaveAttribute(
     'data-state',
     'fading-in',
   )
   await expect(engine).toHaveAttribute('data-context-state', 'running')
+  await expect(interactionEngine).toHaveAttribute('data-enabled', 'true')
   expect(Number(await engine.getAttribute('data-offset'))).toBeCloseTo(pausedOffset, 2)
 })
 
@@ -174,8 +179,8 @@ test('an audio load failure leaves the visual artwork running', async ({ page })
   await page.goto('/')
   const canvas = page.locator('canvas[data-renderer="ready"]')
 
-  await page.getByRole('button', { name: '开启背景音乐' }).click()
-  await expect(page.getByRole('button', { name: '音乐无法加载，点击重试' })).toBeVisible()
+  await page.getByRole('button', { name: '开启声音' }).click()
+  await expect(page.getByRole('button', { name: '声音无法加载，点击重试' })).toBeVisible()
   await expect(page.getByRole('status')).toContainText('背景音乐加载失败')
   await expect(canvas).toBeVisible()
   expect(errors).toHaveLength(1)
@@ -239,14 +244,14 @@ test('renders the normal artwork with Glitter Lab hidden', async ({ page }) => {
 })
 
 test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async ({ page }) => {
-  test.setTimeout(120_000)
+  test.setTimeout(180_000)
   const errors = collectRuntimeErrors(page)
 
   await page.goto('/?debug=true')
   const panel = page.getByLabel('Glitter Lab 开发面板')
   const canvas = page.locator('canvas[data-renderer="ready"]')
   await expect(panel).toBeVisible()
-  await expect(panel.locator('input[type="range"]')).toHaveCount(15)
+  await expect(panel.locator('input[type="range"]')).toHaveCount(16)
   await expect(page.getByTestId('control-flickerSpeed')).toHaveAttribute('max', '10')
   await expect(page.getByTestId('control-sunElevation')).toHaveValue('24')
   await expect(page.getByTestId('control-sunAzimuth')).toHaveValue('28')
@@ -416,6 +421,7 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
     sunAzimuth: -38,
     sunIntensity: 1.25,
     breezeStrength: 0.42,
+    interactionSoundVolume: 0.1,
   }
 
   for (const [key, value] of Object.entries(exportedSettings)) {
@@ -447,6 +453,7 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
   await expect(page.getByTestId('control-sunAzimuth')).toHaveValue('28')
   await expect(page.getByTestId('control-sunIntensity')).toHaveValue('1')
   await expect(page.getByTestId('control-breezeStrength')).toHaveValue('0.42')
+  await expect(page.getByTestId('control-interactionSoundVolume')).toHaveValue('0.1')
 
   await panel.locator('summary').click()
   await expect(panel.getByText('实时视觉参数')).toBeHidden()
@@ -464,6 +471,12 @@ test('Glitter Lab updates the rendered pixels, exports JSON, and resets', async 
 test('pointer breeze mechanism stays bounded, local, and fades after movement stops', async ({ page }) => {
   test.setTimeout(90_000)
   const errors = collectRuntimeErrors(page)
+  const requestedEffects: string[] = []
+  page.on('request', (request) => {
+    if (/glimmer-(?:click|drag)\.wav(?:\?|$)/.test(request.url())) {
+      requestedEffects.push(request.url())
+    }
+  })
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/?debug=true')
@@ -475,6 +488,64 @@ test('pointer breeze mechanism stays bounded, local, and fades after movement st
   await page.getByTestId('control-flickerSpeed').fill('0.1')
   await expect(page.getByTestId('control-waveStrength')).toHaveValue('0.42')
   await expect(page.getByTestId('control-breezeStrength')).toHaveValue('0.42')
+  const interactionAudio = page.getByTestId('interaction-audio-engine')
+  await expect(interactionAudio).toHaveAttribute('data-click-source', '/audio/glimmer-click.wav')
+  await expect(interactionAudio).toHaveAttribute('data-drag-source', '/audio/glimmer-drag.wav')
+  await expect(interactionAudio).toHaveAttribute('data-volume', '0.10')
+  await expect(interactionAudio).toHaveAttribute('data-enabled', 'false')
+  await expect(interactionAudio).toHaveAttribute('data-play-count', '0')
+  await page.getByTestId('control-interactionSoundVolume').fill('0.04')
+  await expect(interactionAudio).toHaveAttribute('data-volume', '0.04')
+  await page.getByTestId('control-interactionSoundVolume').fill('0.1')
+  await expect(interactionAudio).toHaveAttribute('data-volume', '0.10')
+  expect(requestedEffects).toEqual([])
+  const decodedEffects = await interactionAudio.evaluate(async (element) => {
+    const clickSource = element.getAttribute('data-click-source') ?? ''
+    const dragSource = element.getAttribute('data-drag-source') ?? ''
+    const context = new AudioContext()
+    const decode = async (source: string) => {
+      const response = await fetch(source)
+      const bytes = await response.arrayBuffer()
+      const buffer = await context.decodeAudioData(bytes)
+      return {
+        channels: buffer.numberOfChannels,
+        duration: buffer.duration,
+        sampleRate: buffer.sampleRate,
+      }
+    }
+    const [click, drag] = await Promise.all([decode(clickSource), decode(dragSource)])
+    await context.close()
+    return { click, drag }
+  })
+  expect(decodedEffects.click.channels).toBe(2)
+  expect(decodedEffects.click.sampleRate).toBe(44_100)
+  expect(decodedEffects.click.duration).toBeGreaterThan(2.4)
+  expect(decodedEffects.click.duration).toBeLessThan(2.6)
+  expect(decodedEffects.drag.channels).toBe(2)
+  expect(decodedEffects.drag.sampleRate).toBe(44_100)
+  expect(decodedEffects.drag.duration).toBeGreaterThan(3.9)
+  expect(decodedEffects.drag.duration).toBeLessThan(4.1)
+  const requestsBeforeMutedEvent = requestedEffects.length
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new CustomEvent('one-thousand-glimmers:interaction-sound', { detail: 'click' }),
+    )
+  })
+  await page.waitForTimeout(120)
+  await expect(interactionAudio).toHaveAttribute('data-play-count', '0')
+  expect(requestedEffects).toHaveLength(requestsBeforeMutedEvent)
+
+  const soundToggle = page.locator('.ambient-audio__toggle')
+  await soundToggle.click()
+  await expect(interactionAudio).toHaveAttribute('data-enabled', 'true')
+  await page.evaluate(() => {
+    const eventName = 'one-thousand-glimmers:interaction-sound'
+    const eventLog: string[] = []
+    ;(window as unknown as { __interactionSoundEvents: string[] }).__interactionSoundEvents = eventLog
+    window.addEventListener(eventName, (event) => {
+      eventLog.push((event as CustomEvent<string>).detail)
+    })
+  })
   await panel.evaluate((element) => {
     element.style.visibility = 'hidden'
   })
@@ -485,14 +556,78 @@ test('pointer breeze mechanism stays bounded, local, and fades after movement st
     path: 'artifacts/screenshots/phase-3-breeze-idle.png',
   })
 
-  await page.mouse.move(760, 450)
-  await page.waitForTimeout(60)
-  const activeInfluence = await canvas.evaluate(
-    (element) => (element as HTMLCanvasElement & { __pointerInfluence?: number }).__pointerInfluence ?? 0,
+  // Exercise a quiet-water area so the standalone click response cannot hide
+  // inside the already-active reflection band.
+  await page.mouse.move(360, 450)
+  await page.mouse.down()
+  await page.waitForTimeout(240)
+  await page.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
   )
+  const clickState = await canvas.evaluate((element) => {
+    const artwork = element as HTMLCanvasElement & {
+      __pointerClickInfluence?: number
+      __pointerDragInfluence?: number
+    }
+    return {
+      click: artwork.__pointerClickInfluence ?? 0,
+      drag: artwork.__pointerDragInfluence ?? 0,
+    }
+  })
+  const clickScreenshot = await page.screenshot({
+    path: 'artifacts/screenshots/pointer-click-active.png',
+  })
+  await page.mouse.up()
+  await expect(interactionAudio).toHaveAttribute('data-master-volume', '0.10')
+  await expect(interactionAudio).toHaveAttribute('data-play-count', '1')
+  await panel.evaluate((element) => {
+    element.style.visibility = 'visible'
+  })
+  await page.getByTestId('control-interactionSoundVolume').fill('0.04')
+  await expect(interactionAudio).toHaveAttribute('data-master-volume', '0.04')
+  await page.getByTestId('control-interactionSoundVolume').fill('0.1')
+  await expect(interactionAudio).toHaveAttribute('data-master-volume', '0.10')
+  await soundToggle.click()
+  await expect(interactionAudio).toHaveAttribute('data-enabled', 'false')
+  await expect(interactionAudio).toHaveAttribute('data-master-volume', '0.00')
+  await expect(interactionAudio).toHaveAttribute('data-play-count', '1')
+  await soundToggle.click()
+  await expect(interactionAudio).toHaveAttribute('data-enabled', 'true')
+  await expect(interactionAudio).toHaveAttribute('data-master-volume', '0.10')
+  await panel.evaluate((element) => {
+    element.style.visibility = 'hidden'
+  })
+  expect(clickState.click).toBeGreaterThan(0.75)
+  expect(clickState.drag).toBeLessThan(0.03)
+  expect(
+    await countChangedPixelsBetweenScreenshots(page, idleScreenshot, clickScreenshot),
+  ).toBeGreaterThan(80)
+
+  await page.waitForTimeout(1_600)
+  const recoveredClick = await canvas.evaluate(
+    (element) =>
+      (element as HTMLCanvasElement & { __pointerClickInfluence?: number })
+        .__pointerClickInfluence ?? 0,
+  )
+  expect(recoveredClick).toBeLessThan(0.03)
+
+  await page.mouse.move(540, 450)
+  await page.mouse.down()
+  await page.mouse.move(760, 450, { steps: 5 })
+  await page.waitForTimeout(220)
+  await page.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+  )
+  const activeInfluence = await canvas.evaluate((element) => {
+    const artwork = element as HTMLCanvasElement & {
+      __pointerDragInfluence?: number
+    }
+    return artwork.__pointerDragInfluence ?? 0
+  })
   const activeScreenshot = await page.screenshot({
     path: 'artifacts/screenshots/phase-3-breeze-active.png',
   })
+  await page.mouse.up()
   expect(activeInfluence).toBeGreaterThan(0.2)
   expect(activeInfluence).toBeLessThanOrEqual(1)
 
@@ -503,10 +638,26 @@ test('pointer breeze mechanism stays bounded, local, and fades after movement st
   )
   expect(activeChangedPixels).toBeGreaterThan(100)
 
-  await page.waitForTimeout(2_200)
-  const recoveredInfluence = await canvas.evaluate(
-    (element) => (element as HTMLCanvasElement & { __pointerInfluence?: number }).__pointerInfluence ?? 0,
+  const soundEvents = await page.evaluate(
+    () =>
+      (window as unknown as { __interactionSoundEvents: string[] }).__interactionSoundEvents,
   )
+  expect(soundEvents.filter((kind) => kind === 'click')).toHaveLength(2)
+  expect(soundEvents.filter((kind) => kind === 'drag')).toHaveLength(1)
+  expect(requestedEffects.filter((url) => /glimmer-click\.wav(?:\?|$)/.test(url))).toHaveLength(2)
+  expect(requestedEffects.filter((url) => /glimmer-drag\.wav(?:\?|$)/.test(url))).toHaveLength(2)
+
+  await page.waitForTimeout(2_200)
+  const recoveredInfluence = await canvas.evaluate((element) => {
+    const artwork = element as HTMLCanvasElement & {
+      __pointerClickInfluence?: number
+      __pointerDragInfluence?: number
+    }
+    return Math.max(
+      artwork.__pointerClickInfluence ?? 0,
+      artwork.__pointerDragInfluence ?? 0,
+    )
+  })
   await page.screenshot({ path: 'artifacts/screenshots/phase-3-breeze-recovered.png' })
   expect(recoveredInfluence).toBeLessThan(0.03)
 
@@ -520,7 +671,11 @@ test('pointer breeze mechanism stays bounded, local, and fades after movement st
   await page.waitForTimeout(240)
   const decoupledClip = { x: 600, y: 250, width: 520, height: 360 }
   const calmWater = await page.screenshot({ clip: decoupledClip })
-  await page.mouse.move(920, 430)
+  await page.mouse.move(760, 430)
+  await page.mouse.down()
+  await page.mouse.move(920, 430, { steps: 4 })
+  await page.waitForTimeout(220)
+  await page.mouse.up()
   await page.waitForTimeout(60)
   const breezeWithoutAutonomousWaves = await page.screenshot({ clip: decoupledClip })
   const decoupledChangedPixels = await countChangedPixelsBetweenScreenshots(

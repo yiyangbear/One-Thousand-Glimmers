@@ -11,13 +11,17 @@ type ContextState = 'uninitialized' | AudioContextState
 type AudioMetadata = { channels: number; duration: number; sampleRate: number } | null
 
 function labelForState(state: PlaybackState) {
-  if (state === 'error') return '音乐无法加载，点击重试'
-  if (state === 'loading') return '取消加载背景音乐'
-  if (state === 'off' || state === 'fading-out') return '开启背景音乐'
-  return '关闭背景音乐'
+  if (state === 'error') return '声音无法加载，点击重试'
+  if (state === 'loading') return '取消加载声音'
+  if (state === 'off' || state === 'fading-out') return '开启声音'
+  return '关闭声音'
 }
 
-export function AmbientAudio() {
+type AmbientAudioProps = {
+  onSoundEnabledChange: (enabled: boolean) => void
+}
+
+export function AmbientAudio({ onSoundEnabledChange }: AmbientAudioProps) {
   const contextRef = useRef<AudioContext | null>(null)
   const bufferRef = useRef<AudioBuffer | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
@@ -151,6 +155,7 @@ export function AmbientAudio() {
       if (operation !== operationRef.current || !wantsPlaybackRef.current) return
       console.warn('Unable to start the original ambient music.', error)
       wantsPlaybackRef.current = false
+      onSoundEnabledChange(false)
       await contextRef.current?.suspend()
       if (contextRef.current) setContextState(contextRef.current.state)
       updatePlaybackState('error')
@@ -202,6 +207,7 @@ export function AmbientAudio() {
   const togglePlayback = () => {
     const operation = ++operationRef.current
     wantsPlaybackRef.current = !wantsPlaybackRef.current
+    onSoundEnabledChange(wantsPlaybackRef.current)
     if (wantsPlaybackRef.current) void startPlayback(operation)
     else stopPlayback(operation)
   }
@@ -217,7 +223,8 @@ export function AmbientAudio() {
     }
   }, [])
 
-  const isPlaying = playbackState === 'fading-in' || playbackState === 'on'
+  const isSoundEnabled =
+    playbackState === 'loading' || playbackState === 'fading-in' || playbackState === 'on'
 
   return (
     <div className="ambient-audio">
@@ -236,7 +243,7 @@ export function AmbientAudio() {
         className="ambient-audio__toggle"
         type="button"
         aria-label={labelForState(playbackState)}
-        aria-pressed={isPlaying}
+        aria-pressed={isSoundEnabled}
         data-state={playbackState}
         onClick={togglePlayback}
       >

@@ -460,3 +460,257 @@ Validation limitations:
 
 - Automated analysis verifies a materially smoother loop boundary and successful browser decoding, but cannot judge whether the transition is perceptually invisible on the user's listening system.
 - Audible fade balance, the emotional relationship between music and animation, physical mobile playback, and long-listening comfort require human acceptance.
+
+## Post-release refinement — Autonomous solar azimuth
+
+Status: implemented and automatically validated on 2026-10-19; multi-minute pace and naturalness remain pending human art acceptance.
+
+Implemented work:
+
+- Added a pure deterministic azimuth function centered on the Glitter Lab value. After human review found the initial `±14°` result visually masked by normal flicker, the repaired trajectory combines `720 s` and `233 s` cycles with a maximum drift of approximately `±24°` and a clearer first-minutes direction.
+- Replaced frame-delta accumulation with visible wall-clock time so slow hardware does not slow the sun. A visibility-change timestamp reset prevents background time from creating a return jump, while a one-second safety cap handles sleep/resume anomalies.
+- Applied the existing reduced-motion rate (`0.35×`) to solar evolution without freezing the autonomous artwork.
+- Renamed the debug control to “太阳方位角中心” and exposed the center, current azimuth, and accumulated visible time as canvas telemetry for QA.
+- Kept accepted default parameters unchanged. Strengthened only the reflection envelope's soft azimuth-driven horizontal shift (`0.12` to `0.20`) and tilt (`0.18` to `0.22`), so the active band travels across stable water sites without turning the glints into moving particles.
+
+Executed checks:
+
+- Architecture inspection — passed. The pure time function lives in `src/lib`; scene orchestration remains in `GlimmerWater`; no React state update, allocation, or shader recompilation was added to the frame loop.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 5 files / 13 tests. Coverage verifies the accepted initial center, deterministic evolution, gentle one-second change, and the full supported range over a simulated hour.
+- `npm run build` — passed. Output JS is 1,136.18 kB / 316.71 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- First repaired `npm run test:e2e` — 12/14 passed. The 60-second assertion exposed that the prior bounded frame-delta timeline accumulated only about half of real time under slow headless rendering; this was a real device-speed consistency defect, not accepted as success. The long Glitter Lab test separately reached its historical 120-second ceiling while saving its final screenshot, without an assertion failure.
+- Repair — changed the solar clock to visible wall-clock time and increased only the Glitter Lab test's execution budget from 120 to 180 seconds; visual assertions and thresholds were not weakened.
+- Final `npm run test:e2e` — passed, 14/14 tests in 4.6 minutes across Chromium, Firefox, and WebKit.
+- Cross-browser solar telemetry — passed. All three browser smoke runs began at the `28°` center, changed by more than `0.05°` during the existing 1.8-second observation, and remained below a `1°` short-window change.
+- 60-second timeline assertion — passed. The live azimuth moved by more than `12°` from its initial center independent of rendered frame rate.
+- Existing Glitter Lab parameter-response, audio, pointer, responsive, accessibility, console/page-error, WebGL, and soak checks all remained green.
+- Screenshot inspection — passed structural checks. Comparing the dedicated start and 60-second frames shows the active reflection band displaced visibly to the right while maintaining broken clusters, stable point sites, broad quiet water, and no hard mask or UI regression.
+
+Evidence:
+
+- `artifacts/screenshots/phase-5-soak-60s.png`
+- `artifacts/screenshots/sun-motion-start.png`
+- `artifacts/screenshots/sun-motion-60s.png`
+- Normal preview: `http://127.0.0.1:5173/`
+- Debug preview: `http://127.0.0.1:5173/?debug=true`
+
+Validation limitations:
+
+- A 60-second automated soak verifies continuous movement and runtime health, but cannot decide whether the solar pace feels natural over several minutes.
+- The preferred drift range and emotional effect remain subjective and should be accepted in the live artwork before deployment.
+
+## Post-release refinement — Press, drag, and interaction-audio interfaces
+
+Status: implemented and automatically validated on 2026-10-19. The initially pending sound assets were integrated later the same day; physical mouse/touch feel and final audible balance remain pending human acceptance.
+
+Implemented work:
+
+- Replaced hover-only pointer movement with primary pointer down, capture, drag, release, and cancel handling. Hover movement now leaves the water unchanged.
+- Added a standalone press envelope with a `900 ms` clear hold followed by continuous decay, driving a compact anisotropic facet disturbance rather than a circular ring.
+- Drag response now uses direction, speed, and cumulative gesture distance. This removes event-frequency dependence, remains stable for the entire held gesture, then receives a `500 ms` post-release hold and approximately one-to-two-second exponential fade.
+- Enlarged and strengthened the directional drag footprint while retaining spatial falloff, the existing bounded `0–1` influence, no history trail, and no particle allocation.
+- Added separate `click` and `drag` sound events plus an independent Web Audio one-shot bridge. `VITE_POINTER_CLICK_SOUND` and `VITE_POINTER_DRAG_SOUND` resolve optional filenames beneath `public/audio/`; blank variables keep the bridge silent and skip fetching.
+- Added `.env.example`, README setup instructions, teardown for active sources/context, decoded-buffer caching, and non-blocking configured-resource failure handling.
+
+Executed checks and repairs:
+
+- Architecture inspection — passed. Pointer state remains in the scene component, deterministic envelopes/URL resolution live in `src/lib`, and optional audio is isolated from the render loop in `InteractionAudio`.
+- Initial targeted browser check — failed correctly because the press envelope had already decayed to `0.198` before capture, confirming that the original response remained too short to perceive.
+- Press repair — introduced an explicit hold, then increased it to `900 ms` after a high-load full run measured `0.445` against the unchanged `>0.5` threshold. The final full run passed without lowering that threshold.
+- Initial drag checks — exposed that event-by-event distance produced only `0.05–0.11` influence during slow stepped movement. Drag now accumulates total gesture distance and never decays while pressed.
+- Recovery check — initially measured `0.034` after release against the `<0.03` threshold. The release decay rate was adjusted from `2.05` to `2.2`; the final check passed without relaxing recovery acceptance.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 6 files / 17 tests. New coverage verifies click decay, silent unconfigured sound sources, deployment-relative MP3 URL resolution, and distinct click/drag events.
+- `npm run build` — passed. Output JS is 1,140.29 kB / 317.91 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Final targeted Chromium interaction test — passed. Standalone click influence exceeded `0.5`, drag remained near zero during the click, click changed more than 80 sampled pixels, held drag exceeded `0.2`, drag changed more than 100 sampled pixels, wave-strength-zero response remained measurable, both envelopes recovered below `0.03`, and event counts were exactly two clicks plus one drag for the two tested gestures.
+- Final `npm run test:e2e` — passed, 14/14 tests in 4.9 minutes across Chromium, Firefox, and WebKit.
+- Existing ambient audio, sun controls/evolution, Glitter Lab, responsive layout, accessibility, console/page-error, WebGL, and 60-second soak checks remained green.
+- Screenshot inspection — passed structural checks. Click and drag remain localized without splash peaks, ring waves, obvious trails, blank frames, or large color blocks; drag changes the local glint/water response without moving point sites as particles.
+
+Evidence:
+
+- `artifacts/screenshots/pointer-click-active.png`
+- `artifacts/screenshots/phase-3-breeze-idle.png`
+- `artifacts/screenshots/phase-3-breeze-active.png`
+- `artifacts/screenshots/phase-3-breeze-recovered.png`
+
+Validation limitations:
+
+- This limitation was superseded when creator-made click and drag WAV assets were integrated; see the later interaction-sound integration report below.
+- Sound level, sample length, retrigger character, and the feel of the interaction on physical touch hardware require human acceptance after final assets are added.
+
+### Interaction visibility amplification
+
+Status: implemented and automatically validated on 2026-10-19 after human review found the first press/drag response still too easy to miss.
+
+Implemented work:
+
+- Added soft anisotropic interaction masks in the shader rather than adding particles, circular ripples, splashes, or retained trails.
+- A standalone click now activates a compact broken glint patch plus fine ripple-attached light/dark facets. The effect is strongest at the pointer and dissolves through the existing water texture instead of reading as a flat ellipse.
+- Press-and-drag now activates an elongated, direction-aware patch of the same existing glint sites. Its cross-axis width was reduced after screenshot review so the stronger response does not become a global brightness wash.
+- Kept interaction gain independent from autonomous `waveStrength`. The accepted `breezeStrength=0.42` now maps to a clearly readable click response while `0` still disables it.
+- Moved the standalone-click screenshot sample into quiet water, where its response cannot be hidden by the already active solar reflection band.
+
+Executed checks:
+
+- Three successive targeted Chromium Playwright checks passed while balancing click visibility and drag footprint. The final test verifies click/drag separation, bounded influence, pixel response, post-release recovery, clean console/page errors, WebGL `NO_ERROR`, and operation with autonomous wave strength set to zero.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 6 files / 17 tests.
+- `npm run build` — passed. Output JS is 1,142.74 kB / 318.38 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Final `npm run test:e2e` — passed, 14/14 tests in 4.3 minutes across Chromium, Firefox, and WebKit, including the 60-second autonomous soak.
+- Screenshot inspection — passed structural checks. The click frame shows a localized broken shimmer patch in quiet water; the drag frame shows a longer correlated glint response; the recovered frame restores the original quiet-water balance. No hard ring, splash peak, particle path, blank frame, or full-screen color block was found.
+
+Evidence:
+
+- `artifacts/screenshots/phase-3-breeze-idle.png`
+- `artifacts/screenshots/pointer-click-active.png`
+- `artifacts/screenshots/phase-3-breeze-active.png`
+- `artifacts/screenshots/phase-3-breeze-recovered.png`
+
+Validation limitations:
+
+- Static screenshot and pixel-difference checks prove a visible local response but cannot determine the preferred strength or tactile feel on the user's specific mouse, display, and touch hardware. Final interaction intensity remains a human art-acceptance item.
+
+### Compact eased interaction and finer water depth
+
+Status: implemented and automatically validated on 2026-10-19 after human review requested a much smaller footprint, gentler appearance, and more nuanced water depth.
+
+Implemented work:
+
+- Added the explicit GLSL constant `sqrt(1 / 6)` and applied it to both axes of the click mask, drag mask, click height disturbance, and drag height disturbance. The affected area is therefore approximately one sixth of the prior amplified version while direction and aspect ratio are preserved.
+- Replaced instantaneous click/drag activation with exponential attack envelopes (`10 s⁻¹` click, `8 s⁻¹` drag), producing a roughly 200–300 ms visual rise. Attack progress is derived from event wall-clock time rather than rendered-frame count, so slow hardware does not lengthen the transition.
+- Kept the response alive while pressed. On release, click receives a restrained `350 ms` continuation before its existing exponential fade; drag retains its `500 ms` post-release hold.
+- Added long, middle, and capillary ripple components to the base water. Existing deterministic depth, cross, and directional ripple fields warp and modulate them, creating finer cool gray-blue depth without obvious parallel lines.
+
+Executed checks and repairs:
+
+- The first browser run correctly failed because a frame-delta-only attack barely advanced while headless rendering was throttled (`0.087` instead of `>0.75`). The attack was changed to use real elapsed event time; the threshold was not lowered.
+- Millisecond-level early-attack sampling was found unreliable across the Playwright/process boundary because the diagnostic read itself could outlast the requested interval. Exact attack shape is now verified in a deterministic unit test; browser QA verifies the full press response, separation from drag, rendered pixel change, release recovery, and WebGL health.
+- The first release-recovery run measured `0.039` against the unchanged `<0.03` threshold because the full click hold restarted on pointer release. A separate `350 ms` release hold repaired the timing while preserving the slower onset.
+- Final targeted Chromium interaction test — passed in 35.7 seconds. The one-sixth footprint remained visibly measurable at default strength and with autonomous wave strength set to zero; both envelopes recovered below `0.03`.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 6 files / 18 tests. New coverage verifies that the first attack frame remains partial and the curve exceeds `0.9` after 300 ms without reaching an instantaneous hard step.
+- `npm run build` — passed. Output JS is 1,144.75 kB / 318.93 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Final `npm run test:e2e` — passed, 14/14 tests in 4.3 minutes across Chromium, Firefox, and WebKit, including the 60-second autonomous soak.
+- Screenshot inspection — passed structural checks. Click and drag patches are materially smaller than the prior evidence, remain attached to broken water facets, and leave broad quiet water intact. The refined base has additional depth without hard stripes, blank frames, large blocks, rings, splashes, or trails.
+
+Evidence:
+
+- `artifacts/screenshots/phase-3-breeze-idle.png`
+- `artifacts/screenshots/pointer-click-active.png`
+- `artifacts/screenshots/phase-3-breeze-active.png`
+- `artifacts/screenshots/phase-3-breeze-recovered.png`
+
+Validation limitations:
+
+- Automated checks establish the exact geometric scale, continuous envelope, pixel response, and runtime health. The preferred perceived size, rise speed, and subtlety of the added water depth remain human art-acceptance decisions on the target display.
+
+### Creator-made click and drag sound integration
+
+Status: implemented and automatically validated on 2026-10-19; final perceived balance with the ambient composition remains pending human listening acceptance.
+
+Source inspection and implementation:
+
+- `Click.wav`: PCM 16-bit, 44.1 kHz stereo, 2.5 seconds, 442,606 bytes, approximately `-20.1 dBFS` peak and `-36.6 dBFS` RMS.
+- `Drag.wav`: PCM 16-bit, 44.1 kHz stereo, 4.0 seconds, 707,724 bytes, approximately `-9.5 dBFS` peak and `-26.8 dBFS` RMS.
+- No leading or trailing interval longer than `80 ms` below `-50 dBFS` was detected in either master.
+- Copied both Logic Pro WAV files unchanged to `public/audio/glimmer-click.wav` and `public/audio/glimmer-drag.wav`. SHA-256 comparison confirms each project asset is byte-identical to its supplied source.
+- Kept lossless WAV to preserve the authored transients and tails. Their combined size is approximately 1.1 MB and they remain demand-loaded rather than part of the initial JavaScript bundle.
+- Made the assets the default click/drag sources. Environment variables still support replacement; an explicit blank value disables the corresponding effect.
+- Adjusted only playback gain (`1.0` click, `0.32` drag) to compensate for the masters' approximately 10.6 dB peak difference. This yields similar approximate RMS output while leaving both files untouched.
+
+Executed checks:
+
+- Source format, duration, size, peak/RMS level, silence boundaries, and source/project hashes — passed.
+- Initial-page request check — passed. Neither interaction WAV is fetched before an interaction or the dedicated decode assertion.
+- Real Chromium Web Audio decoding — passed. Click decoded to 2 channels / 44.1 kHz / 2.5 seconds; drag decoded to 2 channels / 44.1 kHz / 4.0 seconds.
+- Interaction fetch and cache path — passed. Standalone press requested the click asset, effective drag requested the drag asset, and gesture events remained exactly two clicks plus one drag across the two automated gestures.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 6 files / 19 tests. New coverage verifies bundled defaults, deployment-relative paths, replacement, and explicit blank-value opt-out.
+- `npm run build` — passed. Output JS is 1,145.05 kB / 319.09 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Targeted Chromium interaction test — passed in 38.0 seconds with real asset decoding, requests, event separation, WebGL health, and visual recovery.
+- Final `npm run test:e2e` — passed, 14/14 tests in 4.3 minutes across Chromium, Firefox, and WebKit, including ambient-audio behavior and the 60-second visual soak.
+
+Validation limitations:
+
+- Automated analysis can verify file integrity, decoding, trigger separation, gain math, caching, and visual/runtime isolation, but not perceived loudness, timbral fit, or masking against the ambient composition on the user's speakers or headphones.
+
+### Interaction effect master-volume refinement
+
+Status: implemented and automatically validated on 2026-10-19 after listening feedback found the integrated click/drag effects too prominent.
+
+Implemented work:
+
+- Added a shared Web Audio master `GainNode` after the existing click/drag relative-gain nodes. The source WAV files and their `1.0` / `0.32` compensation remain unchanged.
+- Set the restrained default master level to `0.22`, placing both effects substantially beneath their previous output while retaining the authored transients and decay.
+- Added a live `0–1` “交互音效音量” control to Glitter Lab. It participates in exact reset and JSON export with the other reproducible settings.
+- Applied live changes with `AudioParam.setTargetAtTime` and a `40 ms` time constant, so an already-playing tail changes smoothly instead of stepping or restarting.
+- Kept the audio graph independent from Three.js and the animation loop. Ordinary visits still hide Glitter Lab, while the accepted `0.22` default remains active.
+
+Executed checks:
+
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 6 files / 20 tests. New coverage verifies finite `0–1` master-volume clamping.
+- `npm run build` — passed. Output JS is 1,145.81 kB / 319.35 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Focused Chromium Glitter Lab and interaction runs — passed. The panel exported/reset the `0.22` field; after a real interaction initialized Web Audio, changing the slider to `0.12` updated the connected master target and restoring it returned the target to `0.22`.
+- Full `npm run test:e2e` — passed, 14/14 tests in 4.6 minutes across Chromium, Firefox, and WebKit, including real WAV decoding, click/drag request separation, responsive panel layouts, console/page-error checks, WebGL health, and the 60-second autonomous soak.
+- Responsive screenshot inspection — passed. The sixteenth slider is readable and reachable in the internally scrolling mobile debug panel, with no blank frame, large color block, or control overlap. Evidence: `artifacts/screenshots/phase-5-mobile-debug.png`.
+- `git diff --check` — passed.
+
+Validation limitations:
+
+- Automated checks prove the live gain route and regression health but cannot decide whether `0.22` is exactly the preferred perceived loudness on the user's speakers or headphones. This remains a listening acceptance item; the slider is provided for immediate tuning without rebuilding.
+
+### Final interaction-volume tuning and README editorial pass
+
+Status: implemented and automatically validated on 2026-10-19 after the creator selected `0.10` as the quieter interaction-sound baseline.
+
+Implemented work:
+
+- Changed the shared click/drag Web Audio master default from `0.22` to `0.10`. Source WAV files, click/drag relative compensation, smoothing behavior, and all visual shader parameters remain unchanged.
+- Updated Glitter Lab reset, copied JSON, hidden audio telemetry, unit fixtures, browser expectations, specification, plan, and progress records to use the same `0.10` value.
+- Rewrote the README as a cleaner artwork-first document. It now records autonomous solar movement, the three-scale water-attached glimmer field, press/drag interaction, original ambient music and interaction sounds, the live volume control, local use, QA commands, and deployment without duplicating implementation prose.
+
+Executed checks:
+
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 6 files / 20 tests.
+- `npm run build` — passed. Output JS is 1,145.81 kB / 319.35 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Focused Chromium interaction check — passed. After Web Audio initialization, the connected master reported `0.10`, changed live to `0.04`, and returned to `0.10`; WAV decoding, gesture separation, visual recovery, console health, and WebGL health remained valid.
+- The combined focused run's Glitter Lab visual-cadence assertion initially measured `3,490` changed samples against a timing-sensitive requirement above `3,533.75`; no audio/default assertion failed. The same unmodified test was rerun and passed in 2.4 minutes, identifying a transient screenshot-timing variation rather than a reproducible regression.
+- `git diff --check` — passed.
+
+Validation limitations:
+
+- The `0.10` signal path and reproducible defaults are automatically verified, but the final perceived loudness still depends on playback hardware and remains a human listening judgment.
+
+### Unified artwork sound toggle
+
+Status: implemented and automatically validated on 2026-10-19 after review found that the lower-right control muted only ambient music.
+
+Implemented work:
+
+- Lifted the user's sound-enabled intent to the application boundary and shared it with the independent ambient and interaction audio controllers.
+- The initial off state now prevents click and drag sound nodes from starting. Disabling sound after Web Audio initialization smoothly targets the interaction master at `0`; re-enabling restores the configured `0.10` master.
+- Ambient music retains its two-second fade-in, 1.5-second fade-out, pause-offset resume, error isolation, and browser-autoplay-safe user gesture.
+- Renamed the accessible control labels from background-music-only wording to “开启声音” / “关闭声音”, and adjusted the loading icon state so the single control accurately represents the whole artwork.
+
+Executed checks:
+
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with zero warnings.
+- `npm test` — passed, 6 files / 20 tests.
+- `npm run build` — passed. Output JS is 1,146.13 kB / 319.45 kB gzip; the existing non-failing Vite chunk-size warning remains.
+- Focused Chromium Playwright — passed, 3/3 tests in 1.4 minutes. Coverage verifies initial global mute, ambient enable/disable/resume, load-failure isolation, rejection of a click request while muted, real click playback while enabled, live master transition `0.10 → 0.00 → 0.10`, gesture separation, visual recovery, console health, and WebGL health.
+
+Validation limitations:
+
+- Automation confirms source creation and gain targets, but the subjective relationship between ambient music and interaction transients still requires listening on the target hardware.

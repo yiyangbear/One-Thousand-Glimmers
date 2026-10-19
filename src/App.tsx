@@ -3,6 +3,7 @@ import { AmbientAudio } from './components/AmbientAudio'
 import { Credits } from './components/Credits'
 import { GlitterLab } from './components/GlitterLab'
 import { GlimmerWater } from './components/GlimmerWater'
+import { InteractionAudio } from './components/InteractionAudio'
 import { createDefaultGlitterSettings } from './lib/glitterLab'
 
 type ErrorBoundaryState = { failed: boolean }
@@ -33,6 +34,7 @@ class WebGLErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundar
 
 export function App() {
   const [settings, setSettings] = useState(createDefaultGlitterSettings)
+  const [soundEnabled, setSoundEnabled] = useState(false)
   const showGlitterLab = new URLSearchParams(window.location.search).get('debug') === 'true'
 
   return (
@@ -40,7 +42,8 @@ export function App() {
       <main className="artwork" aria-label="阳光在深蓝灰色江面上安静地明灭">
         <GlimmerWater settings={settings} />
         <Credits />
-        <AmbientAudio />
+        <AmbientAudio onSoundEnabledChange={setSoundEnabled} />
+        <InteractionAudio enabled={soundEnabled} volume={settings.interactionSoundVolume} />
         {showGlitterLab && <GlitterLab settings={settings} onChange={setSettings} />}
       </main>
     </WebGLErrorBoundary>

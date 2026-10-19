@@ -36,13 +36,13 @@
 ## Glitter Lab development milestone
 
 - Ordinary visits keep the artwork free of UI. `?debug=true` reveals a restrained, collapsible panel in the upper-right corner.
-- Implemented live parameters are density, size, flicker speed, sun elevation, sun azimuth, sun intensity, highlight-response gain, fine-point ratio, clustering, bright-layer halo intensity, wave strength, pointer-breeze strength, water-depth contrast, main reflection-band width, and local flicker correlation.
+- Implemented live parameters are density, size, flicker speed, sun elevation, sun azimuth, sun intensity, highlight-response gain, fine-point ratio, clustering, bright-layer halo intensity, wave strength, pointer-breeze strength, interaction-sound volume, water-depth contrast, main reflection-band width, and local flicker correlation.
 - The current visual defaults use the latest supplied tuning (`density 1.23`, `size 1.65`, `flickerSpeed 7.5`, `highlightIntensity 2.65`, `clustering 0`, `bloomIntensity 0.66`, `waveStrength 0.42`, `finePointRatio 1.16`, `waterContrast 1.6`, reflection-band width `0.82`, and local correlation `0.7`). Phase 2 adds an art-directed default sun at elevation `24°`, azimuth `28°`, and intensity `1`.
 - Flicker speed ranges from `0.1` to `10`. Both point-level envelopes and smooth neighborhood pulses respond to it; values above the default `7.5` are an exploratory development range.
 - The temporal envelope combines broad, secondary, slow-drift, and low-amplitude high-frequency components. Faster settings must preserve continuous easing and unsynchronized local detail rather than becoming binary opacity toggles.
 - Reset restores those exact defaults. Copy exports the current parameters as formatted JSON.
 - Pointer breeze strength is shown as unavailable until Phase 3 and must not be represented by an inactive or misleading slider.
-- Control changes update the active `ShaderMaterial` uniforms without a reload or material recompilation.
+- Visual control changes update the active `ShaderMaterial` uniforms without a reload or material recompilation; interaction volume updates the independent Web Audio master gain without touching the render loop.
 
 ## Visual-refactor requirements
 
@@ -67,14 +67,24 @@
 - Elevation changes the near/far fade positions, band width, target slope magnitude, density response, and restrained warm-light bias.
 - Intensity changes both the activity threshold of candidate facets and final highlight radiance; it is distinct from the artistic highlight-response gain.
 - All three controls update the active shader uniforms immediately without recompilation.
+- The azimuth control defines the center of an autonomous drift rather than a frozen value. While the page remains visibly active, azimuth evolves deterministically within approximately `±24°` using two long, mismatched cycles; the reflection envelope uses a strengthened but still soft horizontal/tilt response so the change is legible over several minutes. Motion uses visible wall-clock time rather than frame count, hidden-tab time is not accumulated, and reduced-motion preference slows this drift to `0.35×`.
 
 ## Phase 3 pointer-breeze requirements
 
-- Pointer movement maps to normalized water coordinates and a bounded directional impulse; sparse browser events use distance as a fallback to velocity.
-- The disturbance uses an elliptical spatial falloff aligned to pointer direction and two low-amplitude wave components, never a radial ring function.
-- Input influence is capped at `1`, held for 260 ms, then decays exponentially over roughly 1–2 seconds. Pointer leave stops sampling but does not snap the current response to zero.
+- Press-and-drag movement maps to normalized water coordinates and a bounded directional impulse; sparse browser events use cumulative distance as a fallback to velocity.
+- The disturbance uses a soft anisotropic spatial falloff aligned to pointer or water direction and low-amplitude facet components, never a radial ring function.
+- Input influence is capped at `1`. A click holds for `900 ms`; drag remains stable while pressed and receives a `500 ms` post-release hold, then both decay continuously over roughly 1–2 seconds.
 - The default breeze-strength multiplier is `0.42`, adjustable from `0–1` in Glitter Lab.
-- The disturbance enters the existing height field, so water slopes and attached highlights respond together.
+- Pointer interaction is press-gated: a standalone primary press produces a localized directional facet disturbance, while holding and moving produces a broader drag breeze based on both speed and accumulated gesture distance. Hover-only movement has no effect.
+- Click and drag interaction masks scale both axes by `sqrt(1 / 6)`, reducing their affected area to approximately one sixth of the previously accepted amplified version while preserving direction and aspect ratio.
+- Interaction strength uses a time-based eased attack rather than an instantaneous step. Click reaches its visual peak over roughly 200–300 ms; drag follows a similarly restrained rise and remains independent of render frame rate.
+- Press and drag have separate envelopes. A press holds briefly before fading; drag remains active while held, then uses a short post-release hold and approximately one-to-two-second exponential decay.
+- Press and drag emit separate sound requests. The bundled creator-made `glimmer-click.wav` and `glimmer-drag.wav` files are the defaults; `VITE_POINTER_CLICK_SOUND` and `VITE_POINTER_DRAG_SOUND` can replace them with filenames beneath `public/audio/`, while explicit blank values disable the corresponding sound.
+- Click and drag retain their relative level compensation, then pass through a shared Web Audio master gain. Its quiet default is `0.10`; Glitter Lab adjusts it live from `0–1` with a short smoothing ramp so active tails do not jump in level.
+- Interaction effects remain demand-loaded and independent from the shader loop. Opening the page requests and plays neither effect; click and effective drag gestures load their own decoded buffers on first use and reuse them afterward.
+- The lower-right sound control is the artwork-wide mute. Its default-off state suppresses ambient music and rejects click/drag playback requests; enabling it activates both, and disabling it smoothly drives the interaction master to zero while the ambient track follows its existing fade-out.
+- The disturbance enters the existing height field and also modulates the same broken glint sites and ripple-facet texture, so the readable response emerges from the water rather than a visual overlay.
+- The water base combines broad depth variation with three low-contrast directional ripple scales, including a subdued capillary layer. Depth and cross fields warp and modulate these layers so they do not read as repeated wave lines.
 
 ## Later-phase requirements
 

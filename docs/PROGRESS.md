@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Phase 5 release preparation and the original ambient-music integration are complete with all available automated checks passed. The real music asset is included; final audible balance and loop naturalness remain pending human acceptance.
+Phase 5 release preparation and the original ambient-music integration are complete. Post-release refinement now includes autonomous solar movement plus compact, eased, water-attached press/drag interaction with two creator-made WAV effects and a restrained live master-volume control; automated checks pass, while final interaction mix and long-viewing naturalness remain pending human acceptance.
 
 ## Completed
 
@@ -71,6 +71,20 @@ Phase 5 release preparation and the original ambient-music integration are compl
 - Verified the real 4.0 MB MP3 downloads and decodes in Chromium/Web Audio as 44.1 kHz stereo, and completed a 14-test cross-browser regression.
 - Repaired silent playback in the in-app browser by replacing its stalled `HTMLAudioElement` path with a user-gesture-created Web Audio engine. `AudioContext`, decoded-buffer looping, `GainNode` fades, pause-offset resume, cancellation, and teardown remain independent of the WebGL loop.
 - Verified the repair live in the in-app browser: the context advances to `running`, decodes the 125-second stereo buffer, suspends after fade-out, and resumes from the recorded offset.
+- Added deterministic solar-azimuth evolution around the Glitter Lab center value. After live review showed that the first `±14°` trajectory moved numerically but was masked by normal flicker, expanded the drift to about `±24°`, strengthened the soft reflection-envelope response, and biased the long-cycle blend toward a clear first-minutes direction. Visible-session time advances continuously, hidden tabs do not create a return jump, and reduced-motion mode slows the solar movement with the rest of the artwork.
+- Rebuilt pointer interaction around primary press semantics. A standalone click now produces a held local facet disturbance; press-and-drag uses speed plus cumulative distance, stays active while held, and decays only after release. Hover-only movement no longer alters the water.
+- Added separate click and drag file interfaces through an independent Web Audio one-shot bridge. Environment values can replace the bundled assets, and explicit blank values remain silent without a resource request.
+- Amplified interaction after human review: clicks now wake a compact, broken patch of existing glints and ripple-attached light/dark facets, while drag produces a longer direction-aware shimmer field with a deliberately narrower cross-axis footprint. No new particles, rings, splashes, or history trail were introduced.
+- Revalidated the amplified interaction with TypeScript, lint, 17 unit tests, production build, a targeted default-strength/wave-strength-zero browser check, and the complete 14-test Chromium/Firefox/WebKit suite including the 60-second soak.
+- Refined the accepted interaction after a second human review: both axes now use an exact `sqrt(1 / 6)` scale, reducing click and drag footprint area to approximately one sixth without lowering core brightness. Click and drag now use short exponential attacks computed from real elapsed time, followed by a `350 ms` click-release hold and the existing continuous decay.
+- Added three subdued water-detail scales at long, middle, and capillary frequencies. Existing depth and cross fields warp their phase and amplitude, adding fine depth without drawing explicit wave lines or altering the reflection-band organization.
+- Passed 18 unit tests, production build, targeted Chromium interaction QA, the complete 14-test Chromium/Firefox/WebKit suite, and the 60-second soak after the refinement.
+- Integrated the creator-supplied `Click.wav` and `Drag.wav` masters unchanged as `public/audio/glimmer-click.wav` and `public/audio/glimmer-drag.wav`; source and project SHA-256 hashes match exactly.
+- Made the two WAV assets the deployment defaults while retaining environment overrides and explicit blank-value opt-out. They remain demand-loaded, separately cached, and independent from both ambient playback and the WebGL render loop.
+- Compensated only in playback gain for the masters' approximately 10.6 dB peak-level difference (`1.0` click, `0.32` drag), bringing their RMS output close together without modifying either source file.
+- Verified both assets decode as 44.1 kHz stereo in real Chromium Web Audio with durations of 2.5 and 4.0 seconds. TypeScript, lint, 19 unit tests, production build, targeted interaction audio QA, 14/14 cross-browser tests, and the 60-second soak pass.
+- Lowered the shared click/drag effect master first to `0.22`, then to the accepted quieter value `0.10`, preserving the authored files and their relative click/drag compensation. Added a `0–1` Glitter Lab slider whose changes are smoothed directly on the connected Web Audio master gain and included in reset/copy JSON.
+- Promoted the lower-right button from an ambient-music-only toggle to the artwork-wide sound switch. Its initial off state now rejects interaction sound requests; turning it off after playback smoothly mutes the click/drag master, and turning it on restores the configured `0.10` level.
 
 ## Current issues and risks
 
@@ -78,12 +92,12 @@ Phase 5 release preparation and the original ambient-music integration are compl
 - The production bundle is approximately 315 kB gzip and triggers Vite's generic 500 kB uncompressed chunk warning. This is expected for Three.js/R3F and does not fail the build.
 - Glitter Lab uses a shader-local halo rather than a post-processing pass. Its current default is `0.66`; halo energy remains restricted to rare bright glints, while post-processing bloom remains a possible Phase 4 decision.
 - Three glimmer layers increase fragment-shader work. Current automated browser checks pass without WebGL errors, but thermal and frame-time behavior still varies by hardware.
-- Pointer breeze remains imperceptible on the user's device. Per explicit direction it is retained as an experimental, non-blocking control and deferred; Phase 4 did not increase its strength.
+- The amplified click/drag response is automatically measurable and visually present in screenshots, but preferred strength and tactile feel on the user's mouse, display, and touch hardware remain pending human acceptance.
 - Adaptive DPR responds to sustained pressure, but frame-rate and quality transitions still require observation across integrated/discrete GPUs and high-DPI displays.
 - The source WAV's last second was about 15.5 dB RMS louder than its first second, making a direct loop risky. The prepared crossfade reduces the web asset's boundary mismatch to roughly 2 dB, but the final transition and music/art balance still require listening on the user's speakers/headphones.
 
 ## Next
 
-1. Manually accept the fade level, loop transition, desktop/mobile interaction, and artwork/music balance in the local preview.
-2. Push the accepted music integration to GitHub and verify the deployed Pages audio asset.
-3. Confirm the public Pages URL on desktop and mobile.
+1. Manually accept the standalone click and press-drag visibility on mouse and touch hardware.
+2. Listen to the new `0.10` interaction master both with ambient music off and on, then fine-tune it live in Glitter Lab if necessary.
+3. Continue acceptance of solar pace, music balance, and desktop/mobile interaction before committing and deploying the refinements.
