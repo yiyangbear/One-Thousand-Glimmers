@@ -2,6 +2,8 @@
 
 「一个关于夏日江面日光闪烁的全屏生成艺术作品。」
 
+![One Thousand Glimmers — 江面上的日光闪烁](docs/images/one-thousand-glimmers-preview.png)
+
 从高处房间的窗台向下望，阳光落在细小的水波上。
 
 无数光点在近乎固定的位置亮起，像很小的烟花，随即隐去；
